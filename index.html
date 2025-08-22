@@ -7,7 +7,6 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .chart-bar {
@@ -21,9 +20,6 @@
             color: white;
             font-size: 12px;
             min-width: 20px;
-        }
-        .chart-bar-green {
-            background: #10B981;
         }
         .pie-segment {
             margin: 2px;
@@ -52,12 +48,86 @@
         <div style="padding: 20px; text-align: center;">
             <h1>AI GDP Geospatial Data Dashboard</h1>
             <div class="loading-spinner" style="margin: 20px auto;"></div>
-            <p>Loading dashboard components...</p>
+            <p>Initializing dashboard...</p>
         </div>
     </div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+
+        // Sample data based on your provided CSV files for testing
+        const sampleSystemsData = [
+            {
+                system_name: "CDF-Dashboard",
+                stakeholder_label: "Ministry of Local Government and Rural Development",
+                global_practice: "Governance",
+                system_description: "Aggregates CDF data in terms of projects and utilization",
+                system_tech_stack: "Microsoft. Data entry with Microsoft forms. Data aggregation with SharePoint. Power BI for visualization."
+            },
+            {
+                system_name: "Cash for Work System",
+                stakeholder_label: "SMART Zambia Institute-Department-1",
+                global_practice: "Governance",
+                system_description: "Community based general workers tracker. A social program trying to empower communities",
+                system_tech_stack: "Python and DJANGO-Full stack, Database: PostgreSQL, Forms: ODK"
+            },
+            {
+                system_name: "NWASCO Information System",
+                stakeholder_label: "Ministry of Water Development and Sanitation-National Water Supply and Sanitation Council",
+                global_practice: "Water",
+                system_description: "A regulatory tool that enhances the regulation of water supply and sanitation service provision",
+                system_tech_stack: "---"
+            },
+            {
+                system_name: "SmartCare",
+                stakeholder_label: "Ministry of Health",
+                global_practice: "Health & Nutrition",
+                system_description: "National electronic medical record system used for patient monitoring",
+                system_tech_stack: ".NET Core, ReactJS, Spring Boot Framework (Java, Kotlin), PostgreSQL"
+            },
+            {
+                system_name: "Energy Single Licensing System",
+                stakeholder_label: "Ministry of Energy-Planning and Information Department",
+                global_practice: "Energy & Extractives",
+                system_description: "Streamline the electricity generation application process",
+                system_tech_stack: "Backend: C++, Frontend: JavaScript, HTML, APIs for mini-grids"
+            }
+        ];
+
+        const sampleDatasetsData = [
+            {
+                dataset_name: "Topographical maps",
+                stakeholder_label: "Ministry of Lands and Natural Resources-Survey and Mapping Department",
+                global_practice: "Environment and natural resources",
+                dataset_description: "Maps that show geographical features such as rivers, roads, elevations at different map scales",
+                data_collection_method: "GPS_tracking Other",
+                geographic_coverage: "Entire country"
+            },
+            {
+                dataset_name: "Cash for Work Enumeration form",
+                stakeholder_label: "SMART Zambia Institute-Department-1",
+                global_practice: "Urban, rural, and social development",
+                dataset_description: "CFW dataset contains data on community general workers registered for the cash for works program",
+                data_collection_method: "Field survey",
+                geographic_coverage: "Entire country"
+            },
+            {
+                dataset_name: "Wind and Solar Resource Atlas",
+                stakeholder_label: "Ministry of Energy-Planning and Information Department",
+                global_practice: "Energy & Extractives",
+                dataset_description: "Resource Mapping Project for Solar and Wind resources in Zambia for power generation",
+                data_collection_method: "Satellite_imagery Field_survey GPS_tracking Sensor_network",
+                geographic_coverage: "Entire country"
+            },
+            {
+                dataset_name: "Livestock Survey Dataset",
+                stakeholder_label: "Ministry of Fisheries and Livestock-Policy, Planning and Information Department",
+                global_practice: "Agriculture",
+                dataset_description: "Provide a snapshot of livestock statistics at the provincial level",
+                data_collection_method: "Field survey",
+                geographic_coverage: "Entire country"
+            }
+        ];
 
         const SimpleBarChart = ({ data, dataKey, nameKey, color = "#3B82F6" }) => {
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
@@ -68,7 +138,7 @@
                 <div className="space-y-2">
                     {data.map((item, index) => (
                         <div key={index} className="flex items-center">
-                            <div className="w-32 text-sm text-gray-600 truncate mr-2">
+                            <div className="w-40 text-sm text-gray-600 truncate mr-2" title={item[nameKey]}>
                                 {item[nameKey]}
                             </div>
                             <div className="flex-1">
@@ -116,113 +186,55 @@
             const [activeTab, setActiveTab] = useState('systems');
             const [selectedItem, setSelectedItem] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
+            const [useRealData, setUseRealData] = useState(false);
             const [token, setToken] = useState('');
-            const [debugInfo, setDebugInfo] = useState('');
 
-            const updateDebug = (message) => {
-                console.log(message);
-                setDebugInfo(prev => prev + '\n' + message);
-            };
+            useEffect(() => {
+                // Load sample data immediately for demo
+                setSystemsData(sampleSystemsData);
+                setDatasetsData(sampleDatasetsData);
+                setLoading(false);
+            }, []);
 
-            const fetchData = async () => {
+            const fetchRealData = async () => {
                 if (!token) {
-                    setError('Please enter your GitHub token to access the data');
-                    setLoading(false);
+                    alert('Please enter your GitHub token first');
                     return;
                 }
 
                 try {
                     setLoading(true);
-                    setError(null);
-                    setDebugInfo('Starting data fetch...');
                     
-                    updateDebug('Attempting to fetch Excel file...');
+                    // Try to fetch real data
+                    const response = await fetch('https://raw.githubusercontent.com/mwiingac/ai_gdp/main/data/ai_gdp_data_semi_processed.xlsx', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        // If we can load XLSX library
+                        if (typeof XLSX !== 'undefined') {
+                            const arrayBuffer = await response.arrayBuffer();
+                            const workbook = XLSX.read(arrayBuffer);
+
+                            const systemsSheet = workbook.Sheets['systems_main_gis_systems'];
+                            const systems = systemsSheet ? XLSX.utils.sheet_to_json(systemsSheet) : [];
+
+                            const datasetsSheet = workbook.Sheets['datasets_main_datasets'];
+                            const datasets = datasetsSheet ? XLSX.utils.sheet_to_json(datasetsSheet) : [];
+
+                            setSystemsData(systems);
+                            setDatasetsData(datasets);
+                            setUseRealData(true);
+                        } else {
+                            throw new Error('XLSX library not available');
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     
-                    // Try different approaches for accessing the private repo
-                    const urls = [
-                        'https://raw.githubusercontent.com/mwiingac/ai_gdp/main/data/ai_gdp_data_semi_processed.xlsx',
-                        'https://api.github.com/repos/mwiingac/ai_gdp/contents/data/ai_gdp_data_semi_processed.xlsx'
-                    ];
-
-                    let response;
-                    let arrayBuffer;
-
-                    // Try direct raw file access first
-                    try {
-                        updateDebug('Trying direct raw file access...');
-                        response = await fetch(urls[0], {
-                            headers: { 
-                                'Authorization': `Bearer ${token}`,
-                                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                            }
-                        });
-
-                        if (response.ok) {
-                            updateDebug('Direct access successful!');
-                            arrayBuffer = await response.arrayBuffer();
-                        } else {
-                            throw new Error(`Direct access failed: ${response.status}`);
-                        }
-                    } catch (directError) {
-                        updateDebug(`Direct access failed: ${directError.message}`);
-                        
-                        // Try GitHub API approach
-                        updateDebug('Trying GitHub API approach...');
-                        response = await fetch(urls[1], {
-                            headers: { 
-                                'Authorization': `Bearer ${token}`,
-                                'Accept': 'application/vnd.github.v3+json'
-                            }
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`GitHub API failed: ${response.status} ${response.statusText}`);
-                        }
-
-                        const data = await response.json();
-                        updateDebug('GitHub API response received');
-                        
-                        if (data.content) {
-                            updateDebug('Converting base64 content...');
-                            const base64Content = data.content.replace(/\n/g, '');
-                            const binaryString = atob(base64Content);
-                            const bytes = new Uint8Array(binaryString.length);
-                            for (let i = 0; i < binaryString.length; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-                            arrayBuffer = bytes.buffer;
-                        } else {
-                            throw new Error('No content in GitHub API response');
-                        }
-                    }
-
-                    updateDebug('Parsing Excel file...');
-                    const workbook = XLSX.read(arrayBuffer);
-                    updateDebug(`Found sheets: ${workbook.SheetNames.join(', ')}`);
-
-                    if (!workbook.SheetNames.includes('systems_main_gis_systems')) {
-                        throw new Error('Systems sheet not found. Available sheets: ' + workbook.SheetNames.join(', '));
-                    }
-                    if (!workbook.SheetNames.includes('datasets_main_datasets')) {
-                        throw new Error('Datasets sheet not found. Available sheets: ' + workbook.SheetNames.join(', '));
-                    }
-
-                    const systemsSheet = workbook.Sheets['systems_main_gis_systems'];
-                    const systems = systemsSheet ? XLSX.utils.sheet_to_json(systemsSheet) : [];
-                    updateDebug(`Parsed ${systems.length} systems`);
-
-                    const datasetsSheet = workbook.Sheets['datasets_main_datasets'];
-                    const datasets = datasetsSheet ? XLSX.utils.sheet_to_json(datasetsSheet) : [];
-                    updateDebug(`Parsed ${datasets.length} datasets`);
-
-                    setSystemsData(systems);
-                    setDatasetsData(datasets);
                     setLoading(false);
-                    updateDebug('Data loading complete!');
                 } catch (err) {
-                    updateDebug(`Error: ${err.message}`);
-                    setError(`Error: ${err.message}`);
+                    alert(`Error loading real data: ${err.message}\n\nContinuing with sample data for demonstration.`);
                     setLoading(false);
                 }
             };
@@ -334,83 +346,12 @@
                 );
             };
 
-            if (!token) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Access Dashboard</h2>
-                            <p className="text-gray-600 mb-4">
-                                To access the AI GDP geospatial data dashboard, please enter your GitHub Personal Access Token:
-                            </p>
-                            <input
-                                type="password"
-                                placeholder="Enter your GitHub token (ghp_...)"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
-                                onChange={(e) => setToken(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && fetchData()}
-                            />
-                            <button
-                                onClick={fetchData}
-                                disabled={!token}
-                                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            >
-                                Access Dashboard
-                            </button>
-                            <p className="text-sm text-gray-500 mt-4">
-                                Your token is used only to fetch data and is not stored anywhere.
-                            </p>
-                        </div>
-                    </div>
-                );
-            }
-
             if (loading) {
                 return (
                     <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-center max-w-2xl mx-4">
+                        <div className="text-center">
                             <div className="loading-spinner mx-auto"></div>
-                            <p className="mt-4 text-lg">Loading geospatial data...</p>
-                            <div className="mt-4 bg-gray-100 p-4 rounded text-left text-sm">
-                                <h4 className="font-semibold">Debug Info:</h4>
-                                <pre className="whitespace-pre-wrap text-xs">{debugInfo}</pre>
-                            </div>
-                            <button 
-                                onClick={() => {
-                                    setLoading(false);
-                                    setError('Loading cancelled by user');
-                                }}
-                                className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                            >
-                                Cancel Loading
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-
-            if (error) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-center text-red-600 max-w-2xl mx-4">
-                            <p className="text-xl mb-4">{error}</p>
-                            <div className="mt-4 bg-gray-100 p-4 rounded text-left text-sm">
-                                <h4 className="font-semibold text-black">Debug Log:</h4>
-                                <pre className="whitespace-pre-wrap text-xs text-black">{debugInfo}</pre>
-                            </div>
-                            <div className="space-x-4 mt-4">
-                                <button 
-                                    onClick={() => setToken('')} 
-                                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                                >
-                                    Try Different Token
-                                </button>
-                                <button 
-                                    onClick={fetchData} 
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                >
-                                    Retry
-                                </button>
-                            </div>
+                            <p className="mt-4 text-lg">Loading dashboard...</p>
                         </div>
                     </div>
                 );
@@ -431,17 +372,35 @@
             return (
                 <div className="min-h-screen bg-gray-50">
                     <header className="bg-white shadow-lg">
-                        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
-                                <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
+                        <div className="max-w-7xl mx-auto px-4 py-6">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
+                                    <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
+                                    {!useRealData && (
+                                        <p className="text-orange-600 text-sm mt-1">Currently showing sample data for demonstration</p>
+                                    )}
+                                </div>
+                                <div className="flex space-x-2">
+                                    {!useRealData && (
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="password"
+                                                placeholder="GitHub token (optional)"
+                                                className="px-3 py-1 border rounded text-sm"
+                                                value={token}
+                                                onChange={(e) => setToken(e.target.value)}
+                                            />
+                                            <button
+                                                onClick={fetchRealData}
+                                                className="bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700"
+                                            >
+                                                Load Real Data
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setToken('')}
-                                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                            >
-                                Change Token
-                            </button>
                         </div>
                     </header>
 
