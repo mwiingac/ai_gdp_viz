@@ -7,6 +7,7 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .chart-bar {
@@ -31,130 +32,31 @@
             text-align: center;
             font-weight: 500;
         }
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="padding: 20px; text-align: center;">
+            <h1>AI GDP Geospatial Data Dashboard</h1>
+            <div class="loading-spinner" style="margin: 20px auto;"></div>
+            <p>Loading your real data from OneDrive...</p>
+        </div>
+    </div>
 
     <script type="text/babel">
-        const { useState } = React;
-
-        // Complete sample data based on your actual CSV files
-        const systemsData = [
-            {
-                system_name: "CDF-Dashboard",
-                stakeholder_label: "Ministry of Local Government and Rural Development",
-                global_practice: "Governance",
-                system_description: "Aggregates CDF data in terms of projects and utilization. The people in the LAs, enter data using Microsoft forms. Then the data is aggregated using SharePoint. Power BI is then used to visualize the dashboard.",
-                system_tech_stack: "Microsoft. Data entry with Microsoft forms. Data aggregation with SharePoint. Power BI for visualization.",
-                initial_developer: "Smart Zambia Institute",
-                host_server: "On-premise",
-                user_authentication_method: "Password MFA Certificate_based"
-            },
-            {
-                system_name: "Constituency Development Fund-MIS",
-                stakeholder_label: "SMART Zambia Institute-Department-1",
-                global_practice: "Governance", 
-                system_description: "The CDF-MIS tracks the disbursement of CDF funds specifically and strictly for CDF projects (GRZ) ONLY. It is like a paper trail of how funds have been used.",
-                system_tech_stack: "Web-framework.NET, NGINX proxy, MicrosoftSQL database",
-                initial_developer: "SMART Zambia Institute",
-                host_server: "On-premise"
-            },
-            {
-                system_name: "Cash for Work System",
-                stakeholder_label: "SMART Zambia Institute-Department-1", 
-                global_practice: "Governance",
-                system_description: "The CFW system is a community based general workers tracker. A social program trying to empower communities (post the El Nino drought).",
-                system_tech_stack: "Python and DJANGO-Full stack, Database: PostgreSQL, Forms: ODK",
-                initial_developer: "SMART Zambia Institute",
-                host_server: "On-premise"
-            },
-            {
-                system_name: "NWASCO Information System",
-                stakeholder_label: "Ministry of Water Development and Sanitation-National Water Supply and Sanitation Council",
-                global_practice: "Water",
-                system_description: "A regulatory tool that enhances the regulation of water supply and sanitation service provision.",
-                initial_developer: "Foresight Resources",
-                host_server: "Private cloud"
-            },
-            {
-                system_name: "SmartCare",
-                stakeholder_label: "Ministry of Health",
-                global_practice: "Health & Nutrition",
-                system_description: "This is a national electronic medical record system used for patient monitoring",
-                system_tech_stack: "Legacy: C#/MS SQL Server, Plus: ReactJS/Spring Boot/PostgreSQL, Pro: .NET Core",
-                initial_developer: "Multiple: Damagi, Salar, BroadReach, SMART Zambia",
-                host_server: "On-premise"
-            },
-            {
-                system_name: "Energy Single Licensing System", 
-                stakeholder_label: "Ministry of Energy-Planning and Information Department",
-                global_practice: "Energy & Extractives",
-                system_description: "Purpose: streamline the electricity generation application process. This is meant for entities that want to set up a generation plant.",
-                system_tech_stack: "Backend: C++, Frontend: JavaScript/HTML, APIs for mini-grids",
-                initial_developer: "Copperbelt University",
-                host_server: "Private cloud"
-            }
-        ];
-
-        const datasetsData = [
-            {
-                dataset_name: "Topographical maps",
-                stakeholder_label: "Ministry of Lands and Natural Resources-Survey and Mapping Department", 
-                global_practice: "Environment and natural resources",
-                dataset_description: "Maps that show geographical features such as rivers, roads, elevations, etc., at different map scales: 1:50,000, 1:100,000, 1:250,000 (raster format)",
-                data_collection_method: "GPS_tracking Other",
-                geographic_coverage: "Entire country",
-                data_collection_frequency: "Quarterly",
-                coordinate_system: "Arc 1950",
-                data_formats: "GeoTIFF Other"
-            },
-            {
-                dataset_name: "Mosaic",
-                stakeholder_label: "Ministry of Mines and Minerals Development-Geological Survey Department",
-                global_practice: "Energy & Extractives", 
-                dataset_description: "These are Zambia's base map segments that are put together to make one map. The combined map is geo-referenced in GeoTIFF format (raster).",
-                data_collection_method: "Field_survey GPS_tracking",
-                geographic_coverage: "Entire country",
-                coordinate_system: "Arc 1950",
-                data_formats: "GeoTIFF"
-            },
-            {
-                dataset_name: "Cash for Work Enumeration form",
-                stakeholder_label: "SMART Zambia Institute-Department-1",
-                global_practice: "Urban, rural, and social development",
-                dataset_description: "The CFW dataset contains data on community general workers registered for the cash for works program. This is a social program trying to empower communities.",
-                data_collection_method: "Field survey", 
-                geographic_coverage: "Entire country",
-                data_collection_frequency: "Daily"
-            },
-            {
-                dataset_name: "Wind and Solar Resource Atlas",
-                stakeholder_label: "Ministry of Energy-Planning and Information Department",
-                global_practice: "Energy & Extractives",
-                dataset_description: "The World Bank working with the Ministry of Energy successfully implemented the Resource Mapping Project for Solar and Wind resources in Zambia which can be used for power generation.",
-                data_collection_method: "Satellite_imagery Field_survey GPS_tracking Sensor_network",
-                geographic_coverage: "Entire country",
-                data_collection_frequency: "One-time collection"
-            },
-            {
-                dataset_name: "Livestock Survey Dataset", 
-                stakeholder_label: "Ministry of Fisheries and Livestock-Policy, Planning and Information Department",
-                global_practice: "Agriculture",
-                dataset_description: "Purpose: provide a snapshot of livestock statistics at the provincial level. Data capturing tools: Survey Solutions, CS-Pro. Primary Sampling Unit: Household. Geo-data: GPS points",
-                data_collection_method: "Field survey",
-                geographic_coverage: "Entire country",
-                data_collection_frequency: "Annually"
-            },
-            {
-                dataset_name: "Camp Boundaries Dataset",
-                stakeholder_label: "Ministry of Agriculture-Policy and Planning Department", 
-                global_practice: "Agriculture",
-                dataset_description: "Purpose: boundaries of the camps. Attribute data: present. Formats: shapefile, raster (only for Lusaka province). Sits on the E-advisory portal and NSDI with Ministry of Lands.",
-                data_collection_method: "Administrative records",
-                geographic_coverage: "Entire country"
-            }
-        ];
+        const { useState, useEffect } = React;
 
         const SimpleBarChart = ({ data, dataKey, nameKey, color = "#3B82F6" }) => {
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
@@ -208,8 +110,102 @@
         };
 
         const Dashboard = () => {
+            const [systemsData, setSystemsData] = useState([]);
+            const [datasetsData, setDatasetsData] = useState([]);
             const [activeTab, setActiveTab] = useState('systems');
             const [selectedItem, setSelectedItem] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [loadingStatus, setLoadingStatus] = useState('Initializing...');
+
+            useEffect(() => {
+                fetchDataFromOneDrive();
+            }, []);
+
+            const fetchDataFromOneDrive = async () => {
+                try {
+                    setLoadingStatus('Connecting to OneDrive...');
+                    
+                    // Convert OneDrive sharing link to direct download link
+                    const shareUrl = 'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?e=7UA0kp';
+                    
+                    // Extract the resource ID and create direct download link
+                    const resourceId = '30d385b9b7055920!134';
+                    const directUrl = `https://api.onedrive.com/v1.0/shares/u!${btoa(shareUrl).replace(/=+$/, '')}/root/content`;
+                    
+                    setLoadingStatus('Downloading Excel file...');
+                    
+                    // Try multiple OneDrive URL formats
+                    const urls = [
+                        directUrl,
+                        'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?download=1',
+                        shareUrl.replace('?e=7UA0kp', '&download=1'),
+                        'https://onedrive.live.com/download?cid=30d385b9b7055920&resid=30d385b9b7055920%21134&authkey=APhyamj9STNMqsM'
+                    ];
+
+                    let response;
+                    let arrayBuffer;
+
+                    for (let i = 0; i < urls.length; i++) {
+                        try {
+                            setLoadingStatus(`Trying download method ${i + 1}...`);
+                            response = await fetch(urls[i], {
+                                method: 'GET',
+                                headers: {
+                                    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*'
+                                }
+                            });
+
+                            if (response.ok) {
+                                setLoadingStatus('File downloaded successfully!');
+                                arrayBuffer = await response.arrayBuffer();
+                                break;
+                            }
+                        } catch (err) {
+                            console.log(`URL ${i + 1} failed:`, err.message);
+                        }
+                    }
+
+                    if (!arrayBuffer) {
+                        throw new Error('Could not download file from any OneDrive URL format');
+                    }
+
+                    setLoadingStatus('Parsing Excel file...');
+                    
+                    // Parse Excel file
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    
+                    setLoadingStatus(`Found sheets: ${workbook.SheetNames.join(', ')}`);
+
+                    // Check for expected sheets
+                    if (!workbook.SheetNames.includes('systems_main_gis_systems')) {
+                        throw new Error(`Systems sheet not found. Available sheets: ${workbook.SheetNames.join(', ')}`);
+                    }
+                    if (!workbook.SheetNames.includes('datasets_main_datasets')) {
+                        throw new Error(`Datasets sheet not found. Available sheets: ${workbook.SheetNames.join(', ')}`);
+                    }
+
+                    // Parse systems data
+                    const systemsSheet = workbook.Sheets['systems_main_gis_systems'];
+                    const systems = XLSX.utils.sheet_to_json(systemsSheet);
+                    setLoadingStatus(`Parsed ${systems.length} systems`);
+
+                    // Parse datasets data
+                    const datasetsSheet = workbook.Sheets['datasets_main_datasets'];
+                    const datasets = XLSX.utils.sheet_to_json(datasetsSheet);
+                    setLoadingStatus(`Parsed ${datasets.length} datasets`);
+
+                    setSystemsData(systems);
+                    setDatasetsData(datasets);
+                    setLoading(false);
+                    setLoadingStatus('Data loaded successfully!');
+
+                } catch (err) {
+                    console.error('Error loading data:', err);
+                    setError(`Failed to load data: ${err.message}`);
+                    setLoading(false);
+                }
+            };
 
             const getAllUniqueStakeholders = () => {
                 const all = [...systemsData.map(i => i.stakeholder_label), ...datasetsData.map(i => i.stakeholder_label)];
@@ -274,8 +270,11 @@
                 const systemFields = [
                     { key: 'stakeholder_label', label: 'Stakeholder' },
                     { key: 'system_description', label: 'Description' },
+                    { key: 'managing_partners_y', label: 'Managing Partners' },
+                    { key: 'dept_agency_gis_incharge', label: 'Department/Agency' },
                     { key: 'system_tech_stack', label: 'Technology Stack' },
                     { key: 'initial_developer', label: 'Developer' },
+                    { key: 'date_developed', label: 'Date Developed' },
                     { key: 'host_server', label: 'Host Server' },
                     { key: 'user_authentication_method', label: 'Authentication' }
                 ];
@@ -283,9 +282,11 @@
                 const datasetFields = [
                     { key: 'stakeholder_label', label: 'Stakeholder' },
                     { key: 'dataset_description', label: 'Description' },
+                    { key: 'data_custodian_stakeholder', label: 'Data Custodian' },
                     { key: 'data_collection_method', label: 'Collection Method' },
                     { key: 'geographic_coverage', label: 'Geographic Coverage' },
                     { key: 'data_collection_frequency', label: 'Collection Frequency' },
+                    { key: 'access_restrictions', label: 'Access Restrictions' },
                     { key: 'coordinate_system', label: 'Coordinate System' },
                     { key: 'data_formats', label: 'Data Formats' }
                 ];
@@ -296,14 +297,14 @@
 
                 return (
                     <div className="space-y-4">
-                        <h3 className={`text-xl font-bold ${color}`}>{name}</h3>
+                        <h3 className={`text-xl font-bold ${color}`}>{name || 'Unnamed'}</h3>
                         {fields.map(field => {
                             const value = item[field.key];
                             if (value && value.toString().trim()) {
                                 return (
                                     <div key={field.key} className="border-b pb-3">
                                         <dt className="font-semibold text-gray-700 mb-1">{field.label}:</dt>
-                                        <dd className="text-gray-600 text-sm leading-relaxed">{value}</dd>
+                                        <dd className="text-gray-600 text-sm leading-relaxed break-words">{value}</dd>
                                     </div>
                                 );
                             }
@@ -312,6 +313,47 @@
                     </div>
                 );
             };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center max-w-md">
+                            <div className="loading-spinner mx-auto"></div>
+                            <p className="mt-4 text-lg">Loading Your Real Data</p>
+                            <p className="mt-2 text-sm text-gray-600">{loadingStatus}</p>
+                            <div className="mt-4 text-xs text-gray-500">
+                                This may take a moment as we fetch your Excel file from OneDrive...
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center text-red-600 max-w-2xl mx-4">
+                            <h2 className="text-xl font-bold mb-4">Unable to Load Data</h2>
+                            <p className="mb-4">{error}</p>
+                            <div className="bg-gray-100 p-4 rounded text-left text-sm text-gray-700">
+                                <h4 className="font-semibold mb-2">Troubleshooting:</h4>
+                                <ul className="list-disc list-inside space-y-1">
+                                    <li>Ensure the OneDrive link has proper sharing permissions</li>
+                                    <li>Verify the Excel file contains the expected sheets</li>
+                                    <li>Check that the file is accessible from the web</li>
+                                </ul>
+                                <p className="mt-3 text-xs">Status: {loadingStatus}</p>
+                            </div>
+                            <button 
+                                onClick={fetchDataFromOneDrive} 
+                                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Retry Loading
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
 
             const uniqueStakeholders = getAllUniqueStakeholders();
             const stakeholdersByPractice = getStakeholdersByGlobalPractice();
@@ -331,7 +373,7 @@
                         <div className="max-w-7xl mx-auto px-4 py-6">
                             <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
                             <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
-                            <p className="text-blue-600 text-sm mt-1">✅ Dashboard fully functional with representative data from your profiling exercise</p>
+                            <p className="text-green-600 text-sm mt-1">✅ Live data loaded from OneDrive • {systemsData.length} systems • {datasetsData.length} datasets</p>
                         </div>
                     </header>
 
@@ -406,7 +448,7 @@
                                         {activeTab === 'systems' ? 'Systems' : 'Datasets'} per Stakeholder
                                     </h3>
                                     <SimpleBarChart 
-                                        data={currentStakeholderData} 
+                                        data={currentStakeholderData.slice(0, 10)} 
                                         dataKey="count" 
                                         nameKey="stakeholder"
                                         color={activeTab === 'systems' ? '#3B82F6' : '#10B981'}
@@ -442,9 +484,9 @@
                                                 onClick={() => setSelectedItem(item)}
                                             >
                                                 <div className={`font-medium ${activeTab === 'systems' ? 'text-blue-600' : 'text-green-600'}`}>
-                                                    {item[itemKey]}
+                                                    {item[itemKey] || 'Unnamed'}
                                                 </div>
-                                                <div className="text-sm text-gray-500 mt-1">{item.stakeholder_label}</div>
+                                                <div className="text-sm text-gray-500 mt-1">{item.stakeholder_label || 'Unknown'}</div>
                                             </div>
                                         ))}
                                     </div>
