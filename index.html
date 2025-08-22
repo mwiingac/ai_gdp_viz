@@ -44,11 +44,33 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .refresh-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(107, 114, 128, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .refresh-button:hover {
+            background: #3B82F6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
     </style>
 </head>
 <body>
     <div id="root">
-                                <div style="padding: 20px; text-align: center;">
+        <div style="padding: 20px; text-align: center;">
             <h1>AI GDP Geospatial Profiling</h1>
             <div class="loading-spinner" style="margin: 20px auto;"></div>
             <p>Loading your real data ...</p>
@@ -197,7 +219,7 @@
                     // Convert Dropbox sharing link to direct download link
                     const dropboxUrl = 'https://www.dropbox.com/scl/fi/wp5exxawkarx3fyxaoxhn/ai_gdp_data_semi_processed.xlsx?rlkey=a8o3uszatn80welt8wyh16z7q&st=9m7ribsp&dl=0';
                     
-                    setLoadingStatus('Downloading Excel file ...');
+                    setLoadingStatus('Downloading file ...');
                     
                     // Try multiple Dropbox URL formats
                     const urls = [
@@ -237,9 +259,9 @@
                         throw new Error('Could not download file from any OneDrive URL format');
                     }
 
-                    setLoadingStatus('Parsing Excel file...');
+                    setLoadingStatus('Parsing file...');
                     
-                    // Parse Excel file
+                    // Parse file
                     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                     
                     setLoadingStatus(`Found sheets: ${workbook.SheetNames.join(', ')}`);
@@ -272,6 +294,15 @@
                     setError(`Failed to load data: ${err.message}`);
                     setLoading(false);
                 }
+            };
+
+            const handleRefresh = () => {
+                setLoading(true);
+                setError(null);
+                setSelectedItem(null);
+                setSystemsData([]);
+                setDatasetsData([]);
+                fetchDataFromDropbox();
             };
 
             const getAllUniqueStakeholders = () => {
@@ -389,7 +420,7 @@
                             <p className="mt-4 text-lg">Loading Your Real Data</p>
                             <p className="mt-2 text-sm text-gray-600">{loadingStatus}</p>
                             <div className="mt-4 text-xs text-gray-500">
-                                Fetching your Excel file from source...
+                                Fetching data from source...
                             </div>
                         </div>
                     </div>
@@ -406,7 +437,7 @@
                                 <h4 className="font-semibold mb-2">Troubleshooting:</h4>
                                 <ul className="list-disc list-inside space-y-1">
                                     <li>Ensure the source link has proper sharing permissions</li>
-                                    <li>Verify the Excel file contains the expected sheets</li>
+                                    <li>Verify the file contains the expected sheets</li>
                                     <li>Check that the file is accessible from the web</li>
                                 </ul>
                                 <p className="mt-3 text-xs">Status: {loadingStatus}</p>
@@ -436,6 +467,15 @@
 
             return (
                 <div className="min-h-screen bg-gray-50">
+                    {/* Refresh Button */}
+                    <button 
+                        className="refresh-button" 
+                        onClick={handleRefresh}
+                        title="Refresh data from source"
+                    >
+                        Refresh
+                    </button>
+
                     <header className="bg-white shadow-lg">
                         <div className="max-w-7xl mx-auto px-4 py-6">
                             <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
@@ -584,7 +624,3 @@
     </script>
 </body>
 </html>
-
-
-
-
