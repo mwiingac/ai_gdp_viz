@@ -1,1 +1,1 @@
-# aig_dp_viz
+# ai_gdp_viz
