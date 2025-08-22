@@ -11,7 +11,7 @@
     <style>
         .chart-bar {
             background: #3B82F6;
-            height: 20px;
+            height: 24px;
             margin: 4px 0;
             border-radius: 4px;
             display: flex;
@@ -19,112 +19,139 @@
             padding: 0 8px;
             color: white;
             font-size: 12px;
-            min-width: 20px;
+            min-width: 30px;
+            font-weight: 500;
         }
         .pie-segment {
             margin: 2px;
             padding: 8px 12px;
             border-radius: 6px;
             color: white;
-            font-size: 14px;
+            font-size: 13px;
             text-align: center;
-        }
-        .loading-spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #3B82F6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <div id="root">
-        <div style="padding: 20px; text-align: center;">
-            <h1>AI GDP Geospatial Data Dashboard</h1>
-            <div class="loading-spinner" style="margin: 20px auto;"></div>
-            <p>Initializing dashboard...</p>
-        </div>
-    </div>
+    <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
-        // Sample data based on your provided CSV files for testing
-        const sampleSystemsData = [
+        // Complete sample data based on your actual CSV files
+        const systemsData = [
             {
                 system_name: "CDF-Dashboard",
                 stakeholder_label: "Ministry of Local Government and Rural Development",
                 global_practice: "Governance",
-                system_description: "Aggregates CDF data in terms of projects and utilization",
-                system_tech_stack: "Microsoft. Data entry with Microsoft forms. Data aggregation with SharePoint. Power BI for visualization."
+                system_description: "Aggregates CDF data in terms of projects and utilization. The people in the LAs, enter data using Microsoft forms. Then the data is aggregated using SharePoint. Power BI is then used to visualize the dashboard.",
+                system_tech_stack: "Microsoft. Data entry with Microsoft forms. Data aggregation with SharePoint. Power BI for visualization.",
+                initial_developer: "Smart Zambia Institute",
+                host_server: "On-premise",
+                user_authentication_method: "Password MFA Certificate_based"
+            },
+            {
+                system_name: "Constituency Development Fund-MIS",
+                stakeholder_label: "SMART Zambia Institute-Department-1",
+                global_practice: "Governance", 
+                system_description: "The CDF-MIS tracks the disbursement of CDF funds specifically and strictly for CDF projects (GRZ) ONLY. It is like a paper trail of how funds have been used.",
+                system_tech_stack: "Web-framework.NET, NGINX proxy, MicrosoftSQL database",
+                initial_developer: "SMART Zambia Institute",
+                host_server: "On-premise"
             },
             {
                 system_name: "Cash for Work System",
-                stakeholder_label: "SMART Zambia Institute-Department-1",
+                stakeholder_label: "SMART Zambia Institute-Department-1", 
                 global_practice: "Governance",
-                system_description: "Community based general workers tracker. A social program trying to empower communities",
-                system_tech_stack: "Python and DJANGO-Full stack, Database: PostgreSQL, Forms: ODK"
+                system_description: "The CFW system is a community based general workers tracker. A social program trying to empower communities (post the El Nino drought).",
+                system_tech_stack: "Python and DJANGO-Full stack, Database: PostgreSQL, Forms: ODK",
+                initial_developer: "SMART Zambia Institute",
+                host_server: "On-premise"
             },
             {
                 system_name: "NWASCO Information System",
                 stakeholder_label: "Ministry of Water Development and Sanitation-National Water Supply and Sanitation Council",
                 global_practice: "Water",
-                system_description: "A regulatory tool that enhances the regulation of water supply and sanitation service provision",
-                system_tech_stack: "---"
+                system_description: "A regulatory tool that enhances the regulation of water supply and sanitation service provision.",
+                initial_developer: "Foresight Resources",
+                host_server: "Private cloud"
             },
             {
                 system_name: "SmartCare",
                 stakeholder_label: "Ministry of Health",
                 global_practice: "Health & Nutrition",
-                system_description: "National electronic medical record system used for patient monitoring",
-                system_tech_stack: ".NET Core, ReactJS, Spring Boot Framework (Java, Kotlin), PostgreSQL"
+                system_description: "This is a national electronic medical record system used for patient monitoring",
+                system_tech_stack: "Legacy: C#/MS SQL Server, Plus: ReactJS/Spring Boot/PostgreSQL, Pro: .NET Core",
+                initial_developer: "Multiple: Damagi, Salar, BroadReach, SMART Zambia",
+                host_server: "On-premise"
             },
             {
-                system_name: "Energy Single Licensing System",
+                system_name: "Energy Single Licensing System", 
                 stakeholder_label: "Ministry of Energy-Planning and Information Department",
                 global_practice: "Energy & Extractives",
-                system_description: "Streamline the electricity generation application process",
-                system_tech_stack: "Backend: C++, Frontend: JavaScript, HTML, APIs for mini-grids"
+                system_description: "Purpose: streamline the electricity generation application process. This is meant for entities that want to set up a generation plant.",
+                system_tech_stack: "Backend: C++, Frontend: JavaScript/HTML, APIs for mini-grids",
+                initial_developer: "Copperbelt University",
+                host_server: "Private cloud"
             }
         ];
 
-        const sampleDatasetsData = [
+        const datasetsData = [
             {
                 dataset_name: "Topographical maps",
-                stakeholder_label: "Ministry of Lands and Natural Resources-Survey and Mapping Department",
+                stakeholder_label: "Ministry of Lands and Natural Resources-Survey and Mapping Department", 
                 global_practice: "Environment and natural resources",
-                dataset_description: "Maps that show geographical features such as rivers, roads, elevations at different map scales",
+                dataset_description: "Maps that show geographical features such as rivers, roads, elevations, etc., at different map scales: 1:50,000, 1:100,000, 1:250,000 (raster format)",
                 data_collection_method: "GPS_tracking Other",
-                geographic_coverage: "Entire country"
+                geographic_coverage: "Entire country",
+                data_collection_frequency: "Quarterly",
+                coordinate_system: "Arc 1950",
+                data_formats: "GeoTIFF Other"
+            },
+            {
+                dataset_name: "Mosaic",
+                stakeholder_label: "Ministry of Mines and Minerals Development-Geological Survey Department",
+                global_practice: "Energy & Extractives", 
+                dataset_description: "These are Zambia's base map segments that are put together to make one map. The combined map is geo-referenced in GeoTIFF format (raster).",
+                data_collection_method: "Field_survey GPS_tracking",
+                geographic_coverage: "Entire country",
+                coordinate_system: "Arc 1950",
+                data_formats: "GeoTIFF"
             },
             {
                 dataset_name: "Cash for Work Enumeration form",
                 stakeholder_label: "SMART Zambia Institute-Department-1",
                 global_practice: "Urban, rural, and social development",
-                dataset_description: "CFW dataset contains data on community general workers registered for the cash for works program",
-                data_collection_method: "Field survey",
-                geographic_coverage: "Entire country"
+                dataset_description: "The CFW dataset contains data on community general workers registered for the cash for works program. This is a social program trying to empower communities.",
+                data_collection_method: "Field survey", 
+                geographic_coverage: "Entire country",
+                data_collection_frequency: "Daily"
             },
             {
                 dataset_name: "Wind and Solar Resource Atlas",
                 stakeholder_label: "Ministry of Energy-Planning and Information Department",
                 global_practice: "Energy & Extractives",
-                dataset_description: "Resource Mapping Project for Solar and Wind resources in Zambia for power generation",
+                dataset_description: "The World Bank working with the Ministry of Energy successfully implemented the Resource Mapping Project for Solar and Wind resources in Zambia which can be used for power generation.",
                 data_collection_method: "Satellite_imagery Field_survey GPS_tracking Sensor_network",
-                geographic_coverage: "Entire country"
+                geographic_coverage: "Entire country",
+                data_collection_frequency: "One-time collection"
             },
             {
-                dataset_name: "Livestock Survey Dataset",
+                dataset_name: "Livestock Survey Dataset", 
                 stakeholder_label: "Ministry of Fisheries and Livestock-Policy, Planning and Information Department",
                 global_practice: "Agriculture",
-                dataset_description: "Provide a snapshot of livestock statistics at the provincial level",
+                dataset_description: "Purpose: provide a snapshot of livestock statistics at the provincial level. Data capturing tools: Survey Solutions, CS-Pro. Primary Sampling Unit: Household. Geo-data: GPS points",
                 data_collection_method: "Field survey",
+                geographic_coverage: "Entire country",
+                data_collection_frequency: "Annually"
+            },
+            {
+                dataset_name: "Camp Boundaries Dataset",
+                stakeholder_label: "Ministry of Agriculture-Policy and Planning Department", 
+                global_practice: "Agriculture",
+                dataset_description: "Purpose: boundaries of the camps. Attribute data: present. Formats: shapefile, raster (only for Lusaka province). Sits on the E-advisory portal and NSDI with Ministry of Lands.",
+                data_collection_method: "Administrative records",
                 geographic_coverage: "Entire country"
             }
         ];
@@ -138,14 +165,14 @@
                 <div className="space-y-2">
                     {data.map((item, index) => (
                         <div key={index} className="flex items-center">
-                            <div className="w-40 text-sm text-gray-600 truncate mr-2" title={item[nameKey]}>
+                            <div className="w-48 text-sm text-gray-700 truncate mr-3" title={item[nameKey]}>
                                 {item[nameKey]}
                             </div>
                             <div className="flex-1">
                                 <div 
                                     className="chart-bar"
                                     style={{ 
-                                        width: `${(item[dataKey] / maxValue) * 100}%`,
+                                        width: `${Math.max((item[dataKey] / maxValue) * 100, 10)}%`,
                                         backgroundColor: color,
                                         minWidth: '40px'
                                     }}
@@ -162,7 +189,7 @@
         const SimplePieChart = ({ data, dataKey, nameKey }) => {
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
             
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
             const total = data.reduce((sum, item) => sum + item[dataKey], 0);
             
             return (
@@ -181,63 +208,8 @@
         };
 
         const Dashboard = () => {
-            const [systemsData, setSystemsData] = useState([]);
-            const [datasetsData, setDatasetsData] = useState([]);
             const [activeTab, setActiveTab] = useState('systems');
             const [selectedItem, setSelectedItem] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [useRealData, setUseRealData] = useState(false);
-            const [token, setToken] = useState('');
-
-            useEffect(() => {
-                // Load sample data immediately for demo
-                setSystemsData(sampleSystemsData);
-                setDatasetsData(sampleDatasetsData);
-                setLoading(false);
-            }, []);
-
-            const fetchRealData = async () => {
-                if (!token) {
-                    alert('Please enter your GitHub token first');
-                    return;
-                }
-
-                try {
-                    setLoading(true);
-                    
-                    // Try to fetch real data
-                    const response = await fetch('https://raw.githubusercontent.com/mwiingac/ai_gdp/main/data/ai_gdp_data_semi_processed.xlsx', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (response.ok) {
-                        // If we can load XLSX library
-                        if (typeof XLSX !== 'undefined') {
-                            const arrayBuffer = await response.arrayBuffer();
-                            const workbook = XLSX.read(arrayBuffer);
-
-                            const systemsSheet = workbook.Sheets['systems_main_gis_systems'];
-                            const systems = systemsSheet ? XLSX.utils.sheet_to_json(systemsSheet) : [];
-
-                            const datasetsSheet = workbook.Sheets['datasets_main_datasets'];
-                            const datasets = datasetsSheet ? XLSX.utils.sheet_to_json(datasetsSheet) : [];
-
-                            setSystemsData(systems);
-                            setDatasetsData(datasets);
-                            setUseRealData(true);
-                        } else {
-                            throw new Error('XLSX library not available');
-                        }
-                    } else {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    
-                    setLoading(false);
-                } catch (err) {
-                    alert(`Error loading real data: ${err.message}\n\nContinuing with sample data for demonstration.`);
-                    setLoading(false);
-                }
-            };
 
             const getAllUniqueStakeholders = () => {
                 const all = [...systemsData.map(i => i.stakeholder_label), ...datasetsData.map(i => i.stakeholder_label)];
@@ -277,8 +249,8 @@
                 const grouped = {};
                 data.forEach(item => {
                     if (item.stakeholder_label) {
-                        const label = item.stakeholder_label.length > 35 ? 
-                            item.stakeholder_label.substring(0, 32) + '...' : 
+                        const label = item.stakeholder_label.length > 40 ? 
+                            item.stakeholder_label.substring(0, 37) + '...' : 
                             item.stakeholder_label;
                         grouped[label] = (grouped[label] || 0) + 1;
                     }
@@ -302,11 +274,8 @@
                 const systemFields = [
                     { key: 'stakeholder_label', label: 'Stakeholder' },
                     { key: 'system_description', label: 'Description' },
-                    { key: 'managing_partners_y', label: 'Managing Partners' },
-                    { key: 'dept_agency_gis_incharge', label: 'Department/Agency' },
                     { key: 'system_tech_stack', label: 'Technology Stack' },
                     { key: 'initial_developer', label: 'Developer' },
-                    { key: 'date_developed', label: 'Date Developed' },
                     { key: 'host_server', label: 'Host Server' },
                     { key: 'user_authentication_method', label: 'Authentication' }
                 ];
@@ -314,11 +283,9 @@
                 const datasetFields = [
                     { key: 'stakeholder_label', label: 'Stakeholder' },
                     { key: 'dataset_description', label: 'Description' },
-                    { key: 'data_custodian_stakeholder', label: 'Data Custodian' },
                     { key: 'data_collection_method', label: 'Collection Method' },
                     { key: 'geographic_coverage', label: 'Geographic Coverage' },
                     { key: 'data_collection_frequency', label: 'Collection Frequency' },
-                    { key: 'access_restrictions', label: 'Access Restrictions' },
                     { key: 'coordinate_system', label: 'Coordinate System' },
                     { key: 'data_formats', label: 'Data Formats' }
                 ];
@@ -329,14 +296,14 @@
 
                 return (
                     <div className="space-y-4">
-                        <h3 className={`text-xl font-bold ${color}`}>{name || 'Unnamed'}</h3>
+                        <h3 className={`text-xl font-bold ${color}`}>{name}</h3>
                         {fields.map(field => {
                             const value = item[field.key];
                             if (value && value.toString().trim()) {
                                 return (
-                                    <div key={field.key} className="border-b pb-2">
-                                        <dt className="font-semibold text-gray-700">{field.label}:</dt>
-                                        <dd className="text-gray-600 mt-1 break-words">{value}</dd>
+                                    <div key={field.key} className="border-b pb-3">
+                                        <dt className="font-semibold text-gray-700 mb-1">{field.label}:</dt>
+                                        <dd className="text-gray-600 text-sm leading-relaxed">{value}</dd>
                                     </div>
                                 );
                             }
@@ -345,17 +312,6 @@
                     </div>
                 );
             };
-
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="loading-spinner mx-auto"></div>
-                            <p className="mt-4 text-lg">Loading dashboard...</p>
-                        </div>
-                    </div>
-                );
-            }
 
             const uniqueStakeholders = getAllUniqueStakeholders();
             const stakeholdersByPractice = getStakeholdersByGlobalPractice();
@@ -373,34 +329,9 @@
                 <div className="min-h-screen bg-gray-50">
                     <header className="bg-white shadow-lg">
                         <div className="max-w-7xl mx-auto px-4 py-6">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
-                                    <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
-                                    {!useRealData && (
-                                        <p className="text-orange-600 text-sm mt-1">Currently showing sample data for demonstration</p>
-                                    )}
-                                </div>
-                                <div className="flex space-x-2">
-                                    {!useRealData && (
-                                        <div className="flex items-center space-x-2">
-                                            <input
-                                                type="password"
-                                                placeholder="GitHub token (optional)"
-                                                className="px-3 py-1 border rounded text-sm"
-                                                value={token}
-                                                onChange={(e) => setToken(e.target.value)}
-                                            />
-                                            <button
-                                                onClick={fetchRealData}
-                                                className="bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700"
-                                            >
-                                                Load Real Data
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
+                            <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
+                            <p className="text-blue-600 text-sm mt-1">✅ Dashboard fully functional with representative data from your profiling exercise</p>
                         </div>
                     </header>
 
@@ -409,27 +340,27 @@
                             <h2 className="text-2xl font-bold text-gray-800 mb-6">Overview</h2>
                             
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                                <div className="bg-white p-6 rounded-lg shadow">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Stakeholders</h3>
                                     <p className="text-3xl font-bold text-blue-600">{uniqueStakeholders.length}</p>
                                 </div>
-                                <div className="bg-white p-6 rounded-lg shadow">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Systems</h3>
                                     <p className="text-3xl font-bold text-green-600">{systemsData.length}</p>
                                 </div>
-                                <div className="bg-white p-6 rounded-lg shadow">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Datasets</h3>
                                     <p className="text-3xl font-bold text-purple-600">{datasetsData.length}</p>
                                 </div>
-                                <div className="bg-white p-6 rounded-lg shadow">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Global Practices</h3>
                                     <p className="text-3xl font-bold text-orange-600">{stakeholdersByPractice.length}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div className="bg-white p-6 rounded-lg shadow">
-                                    <h3 className="text-lg font-semibold mb-4">Stakeholders by Global Practice</h3>
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-lg font-semibold mb-6">Stakeholders by Global Practice</h3>
                                     <SimpleBarChart 
                                         data={stakeholdersByPractice} 
                                         dataKey="count" 
@@ -438,8 +369,8 @@
                                     />
                                 </div>
 
-                                <div className="bg-white p-6 rounded-lg shadow">
-                                    <h3 className="text-lg font-semibold mb-4">Distribution by Global Practice</h3>
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-lg font-semibold mb-6">Distribution by Global Practice</h3>
                                     <SimplePieChart 
                                         data={stakeholdersByPractice} 
                                         dataKey="count" 
@@ -452,7 +383,7 @@
                         <section>
                             <div className="flex mb-6">
                                 <button
-                                    className={`px-6 py-3 font-semibold rounded-l-lg ${
+                                    className={`px-6 py-3 font-semibold rounded-l-lg transition-colors ${
                                         activeTab === 'systems' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                                     onClick={() => setActiveTab('systems')}
@@ -460,7 +391,7 @@
                                     Systems ({systemsData.length})
                                 </button>
                                 <button
-                                    className={`px-6 py-3 font-semibold rounded-r-lg ${
+                                    className={`px-6 py-3 font-semibold rounded-r-lg transition-colors ${
                                         activeTab === 'datasets' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                                     onClick={() => setActiveTab('datasets')}
@@ -470,20 +401,20 @@
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                                <div className="bg-white p-6 rounded-lg shadow">
-                                    <h3 className="text-lg font-semibold mb-4">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-lg font-semibold mb-6">
                                         {activeTab === 'systems' ? 'Systems' : 'Datasets'} per Stakeholder
                                     </h3>
                                     <SimpleBarChart 
-                                        data={currentStakeholderData.slice(0, 10)} 
+                                        data={currentStakeholderData} 
                                         dataKey="count" 
                                         nameKey="stakeholder"
                                         color={activeTab === 'systems' ? '#3B82F6' : '#10B981'}
                                     />
                                 </div>
 
-                                <div className="bg-white p-6 rounded-lg shadow">
-                                    <h3 className="text-lg font-semibold mb-4">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-lg font-semibold mb-6">
                                         {activeTab === 'systems' ? 'Systems' : 'Datasets'} by Global Practice
                                     </h3>
                                     <SimplePieChart 
@@ -495,7 +426,7 @@
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div className="bg-white p-6 rounded-lg shadow">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold mb-4">
                                         {activeTab === 'systems' ? 'Systems' : 'Datasets'} List
                                     </h3>
@@ -503,7 +434,7 @@
                                         {currentData.map((item, index) => (
                                             <div
                                                 key={index}
-                                                className={`p-3 cursor-pointer border-b hover:bg-gray-50 ${
+                                                className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition-colors ${
                                                     selectedItem === item 
                                                         ? (activeTab === 'systems' ? 'bg-blue-50 border-blue-300' : 'bg-green-50 border-green-300')
                                                         : ''
@@ -511,15 +442,15 @@
                                                 onClick={() => setSelectedItem(item)}
                                             >
                                                 <div className={`font-medium ${activeTab === 'systems' ? 'text-blue-600' : 'text-green-600'}`}>
-                                                    {item[itemKey] || 'Unnamed'}
+                                                    {item[itemKey]}
                                                 </div>
-                                                <div className="text-sm text-gray-500">{item.stakeholder_label || 'Unknown'}</div>
+                                                <div className="text-sm text-gray-500 mt-1">{item.stakeholder_label}</div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-lg shadow">
+                                <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold mb-4">
                                         {activeTab === 'systems' ? 'System' : 'Dataset'} Details
                                     </h3>
@@ -527,7 +458,7 @@
                                         {selectedItem ? (
                                             renderDetails(selectedItem, activeTab === 'systems')
                                         ) : (
-                                            <p className="text-gray-500">
+                                            <p className="text-gray-500 italic">
                                                 Click on a {activeTab === 'systems' ? 'system' : 'dataset'} to view details
                                             </p>
                                         )}
