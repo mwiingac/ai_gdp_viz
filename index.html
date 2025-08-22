@@ -143,24 +143,6 @@
         body.dark .hover\\:bg-gray-300:hover {
             background-color: #4b5563 !important;
         }
-        
-        body.grey {
-            background-color: #f3f4f6;
-            color: #374151;
-        }
-        body.grey .bg-white {
-            background-color: #e5e7eb !important;
-            color: #374151;
-        }
-        body.grey .bg-gray-50 {
-            background-color: #f3f4f6 !important;
-        }
-        body.grey .text-gray-900 {
-            color: #1f2937 !important;
-        }
-        body.grey .text-gray-800 {
-            color: #374151 !important;
-        }
     </style>
 </head>
 <body>
@@ -313,7 +295,7 @@
             }, []);
 
             const toggleTheme = () => {
-                const themes = ['light', 'grey', 'dark'];
+                const themes = ['light', 'dark'];
                 const currentIndex = themes.indexOf(theme);
                 const nextTheme = themes[(currentIndex + 1) % themes.length];
                 setTheme(nextTheme);
@@ -324,8 +306,7 @@
             const getThemeIcon = () => {
                 switch(theme) {
                     case 'light': return '☀';
-                    case 'grey': return '🌙';
-                    case 'dark': return '🌛';
+                    case 'dark': return '◐';
                     default: return '☀';
                 }
             };
@@ -597,7 +578,7 @@
                     <button 
                         className="theme-button" 
                         onClick={toggleTheme}
-                        title={`Switch to ${theme === 'light' ? 'grey' : theme === 'grey' ? 'dark' : 'light'} theme`}
+                        title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
                     >
                         {getThemeIcon()}
                     </button>
