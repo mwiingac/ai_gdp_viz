@@ -91,12 +91,16 @@
         const SimplePieChart = ({ data, dataKey, nameKey }) => {
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
             
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
+            // Better color palette with no similar blues
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#6B7280'];
             const total = data.reduce((sum, item) => sum + item[dataKey], 0);
+            
+            // Sort data from highest to lowest
+            const sortedData = [...data].sort((a, b) => b[dataKey] - a[dataKey]);
             
             // Calculate angles for pie slices
             let currentAngle = 0;
-            const slices = data.map((item, index) => {
+            const slices = sortedData.map((item, index) => {
                 const percentage = (item[dataKey] / total) * 100;
                 const angle = (item[dataKey] / total) * 360;
                 const startAngle = currentAngle;
@@ -153,7 +157,7 @@
                         </svg>
                     </div>
                     
-                    {/* Legend */}
+                    {/* Legend - sorted from highest to lowest */}
                     <div className="space-y-2 flex-1">
                         {slices.map((slice, index) => (
                             <div key={index} className="flex items-center">
