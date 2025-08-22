@@ -126,21 +126,23 @@
                 try {
                     setLoadingStatus('Connecting to OneDrive...');
                     
-                    // Convert OneDrive sharing link to direct download link
-                    const shareUrl = 'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?e=7UA0kp';
-                    
-                    // Extract the resource ID and create direct download link
-                    const resourceId = '30d385b9b7055920!134';
-                    const directUrl = `https://api.onedrive.com/v1.0/shares/u!${btoa(shareUrl).replace(/=+$/, '')}/root/content`;
+                    // Use the provided OneDrive links
+                    const shareUrl1 = 'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?e=7UA0kp';
+                    const shareUrl2 = 'https://onedrive.live.com/personal/30d385b9b7055920/_layouts/15/Doc.aspx?sourcedoc=%7B617AF48F-49BD-4C33-AAC3-06F3CA69AA6B%7D&file=ai_gdp_data_semi_processed.xlsx&action=default&mobileredirect=true';
                     
                     setLoadingStatus('Downloading Excel file...');
                     
                     // Try multiple OneDrive URL formats
                     const urls = [
-                        directUrl,
+                        // Direct download attempts
                         'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?download=1',
-                        shareUrl.replace('?e=7UA0kp', '&download=1'),
-                        'https://onedrive.live.com/download?cid=30d385b9b7055920&resid=30d385b9b7055920%21134&authkey=APhyamj9STNMqsM'
+                        shareUrl1.replace('?e=7UA0kp', '&download=1'),
+                        'https://onedrive.live.com/download?cid=30d385b9b7055920&resid=30d385b9b7055920%21134&authkey=APhyamj9STNMqsM',
+                        // Try the direct file ID approach
+                        'https://api.onedrive.com/v1.0/drives/30d385b9b7055920/items/617AF48F49BD4C33AAC306F3CA69AA6B/content',
+                        // Alternative formats
+                        'https://onedrive.live.com/download?resid=30d385b9b7055920%21134',
+                        `https://api.onedrive.com/v1.0/shares/u!${btoa(shareUrl1).replace(/=+$/, '')}/root/content`
                     ];
 
                     let response;
