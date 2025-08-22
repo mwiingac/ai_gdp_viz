@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI GDP Geospatial Data Dashboard</title>
+    <title>AI GDP Stakeholder Profiling</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -51,7 +51,7 @@
                                 <div style="padding: 20px; text-align: center;">
             <h1>AI GDP Geospatial Data Dashboard</h1>
             <div class="loading-spinner" style="margin: 20px auto;"></div>
-            <p>Loading your real data from Dropbox...</p>
+            <p>Loading your real data ...</p>
         </div>
     </div>
 
@@ -198,7 +198,7 @@
                     // Convert Dropbox sharing link to direct download link
                     const dropboxUrl = 'https://www.dropbox.com/scl/fi/wp5exxawkarx3fyxaoxhn/ai_gdp_data_semi_processed.xlsx?rlkey=a8o3uszatn80welt8wyh16z7q&st=9m7ribsp&dl=0';
                     
-                    setLoadingStatus('Downloading Excel file from Dropbox...');
+                    setLoadingStatus('Downloading Excel file ...');
                     
                     // Try multiple Dropbox URL formats
                     const urls = [
@@ -441,7 +441,7 @@
                         <div className="max-w-7xl mx-auto px-4 py-6">
                             <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
                             <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
-                            <p className="text-green-600 text-sm mt-1">✅ Live data loaded from Dropbox • {systemsData.length} systems • {datasetsData.length} datasets</p>
+                            <p className="text-green-600 text-sm mt-1">✅ Live data loaded • {systemsData.length} systems • {datasetsData.length} datasets</p>
                         </div>
                     </header>
 
@@ -585,3 +585,4 @@
     </script>
 </body>
 </html>
+
