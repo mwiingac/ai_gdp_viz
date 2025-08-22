@@ -4,78 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI GDP Geospatial Data Dashboard</title>
-    <!-- More reliable CDN sources -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Fallback styles in case Tailwind doesn't load */
-        .fallback-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .fallback-card {
-            background: white;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 16px;
-        }
-        .fallback-button {
-            background: #2563eb;
+        .chart-bar {
+            background: #3B82F6;
+            height: 20px;
+            margin: 4px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
             color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            font-size: 12px;
+            min-width: 20px;
         }
-        .fallback-input {
-            width: 100%;
+        .chart-bar-green {
+            background: #10B981;
+        }
+        .pie-segment {
+            margin: 2px;
             padding: 8px 12px;
-            border: 1px solid #d1d5db;
             border-radius: 6px;
-            margin-bottom: 16px;
+            color: white;
+            font-size: 14px;
+            text-align: center;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div id="root">
-        <!-- Fallback content while loading -->
-        <div class="fallback-container">
-            <div class="fallback-card">
-                <h1>AI GDP Geospatial Data Dashboard</h1>
-                <p>Loading dashboard...</p>
-                <p id="loading-status">Initializing components...</p>
-            </div>
+        <div style="padding: 20px; text-align: center;">
+            <h1>AI GDP Geospatial Data Dashboard</h1>
+            <div class="loading-spinner" style="margin: 20px auto;"></div>
+            <p>Loading dashboard components...</p>
         </div>
     </div>
 
     <script type="text/babel">
-        // Check if required libraries are loaded
-        if (typeof React === 'undefined') {
-            document.getElementById('loading-status').textContent = 'Error: React library failed to load';
-            throw new Error('React not loaded');
-        }
-        if (typeof ReactDOM === 'undefined') {
-            document.getElementById('loading-status').textContent = 'Error: ReactDOM library failed to load';
-            throw new Error('ReactDOM not loaded');
-        }
-        if (typeof Recharts === 'undefined') {
-            document.getElementById('loading-status').textContent = 'Error: Recharts library failed to load';
-            throw new Error('Recharts not loaded');
-        }
-        if (typeof XLSX === 'undefined') {
-            document.getElementById('loading-status').textContent = 'Error: XLSX library failed to load';
-            throw new Error('XLSX not loaded');
-        }
-
         const { useState, useEffect } = React;
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } = Recharts;
+
+        const SimpleBarChart = ({ data, dataKey, nameKey, color = "#3B82F6" }) => {
+            if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
+            
+            const maxValue = Math.max(...data.map(item => item[dataKey]));
+            
+            return (
+                <div className="space-y-2">
+                    {data.map((item, index) => (
+                        <div key={index} className="flex items-center">
+                            <div className="w-32 text-sm text-gray-600 truncate mr-2">
+                                {item[nameKey]}
+                            </div>
+                            <div className="flex-1">
+                                <div 
+                                    className="chart-bar"
+                                    style={{ 
+                                        width: `${(item[dataKey] / maxValue) * 100}%`,
+                                        backgroundColor: color,
+                                        minWidth: '40px'
+                                    }}
+                                >
+                                    {item[dataKey]}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const SimplePieChart = ({ data, dataKey, nameKey }) => {
+            if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
+            
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+            const total = data.reduce((sum, item) => sum + item[dataKey], 0);
+            
+            return (
+                <div className="space-y-2">
+                    {data.map((item, index) => (
+                        <div 
+                            key={index} 
+                            className="pie-segment"
+                            style={{ backgroundColor: colors[index % colors.length] }}
+                        >
+                            {item[nameKey]}: {item[dataKey]} ({Math.round((item[dataKey] / total) * 100)}%)
+                        </div>
+                    ))}
+                </div>
+            );
+        };
 
         const Dashboard = () => {
             const [systemsData, setSystemsData] = useState([]);
@@ -85,8 +118,6 @@
             const [loading, setLoading] = useState(true);
             const [error, setError] = useState(null);
             const [token, setToken] = useState('');
-
-            const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
             const fetchData = async () => {
                 if (!token) {
@@ -110,13 +141,6 @@
                     const arrayBuffer = await response.arrayBuffer();
                     const workbook = XLSX.read(arrayBuffer);
 
-                    if (!workbook.SheetNames.includes('systems_main_gis_systems')) {
-                        throw new Error('Systems sheet not found in the Excel file');
-                    }
-                    if (!workbook.SheetNames.includes('datasets_main_datasets')) {
-                        throw new Error('Datasets sheet not found in the Excel file');
-                    }
-
                     const systemsSheet = workbook.Sheets['systems_main_gis_systems'];
                     const systems = systemsSheet ? XLSX.utils.sheet_to_json(systemsSheet) : [];
 
@@ -127,143 +151,118 @@
                     setDatasetsData(datasets);
                     setLoading(false);
                 } catch (err) {
-                    console.error('Error fetching data:', err);
                     setError(`Error: ${err.message}`);
                     setLoading(false);
                 }
             };
 
             const getAllUniqueStakeholders = () => {
-                try {
-                    const all = [...systemsData.map(i => i.stakeholder_label), ...datasetsData.map(i => i.stakeholder_label)];
-                    return [...new Set(all)].filter(Boolean);
-                } catch (err) {
-                    console.error('Error getting stakeholders:', err);
-                    return [];
-                }
+                const all = [...systemsData.map(i => i.stakeholder_label), ...datasetsData.map(i => i.stakeholder_label)];
+                return [...new Set(all)].filter(Boolean);
             };
 
             const getStakeholdersByGlobalPractice = () => {
-                try {
-                    const combined = [
-                        ...systemsData.map(i => ({ stakeholder: i.stakeholder_label, practice: i.global_practice })),
-                        ...datasetsData.map(i => ({ stakeholder: i.stakeholder_label, practice: i.global_practice }))
-                    ];
+                const combined = [
+                    ...systemsData.map(i => ({ stakeholder: i.stakeholder_label, practice: i.global_practice })),
+                    ...datasetsData.map(i => ({ stakeholder: i.stakeholder_label, practice: i.global_practice }))
+                ];
 
-                    const unique = [];
-                    const seen = new Set();
-                    
-                    combined.forEach(item => {
-                        const key = `${item.stakeholder}-${item.practice}`;
-                        if (!seen.has(key) && item.stakeholder && item.practice) {
-                            seen.add(key);
-                            unique.push(item);
-                        }
-                    });
+                const unique = [];
+                const seen = new Set();
+                
+                combined.forEach(item => {
+                    const key = `${item.stakeholder}-${item.practice}`;
+                    if (!seen.has(key) && item.stakeholder && item.practice) {
+                        seen.add(key);
+                        unique.push(item);
+                    }
+                });
 
-                    const groups = {};
-                    unique.forEach(item => {
-                        if (!groups[item.practice]) groups[item.practice] = new Set();
-                        groups[item.practice].add(item.stakeholder);
-                    });
+                const groups = {};
+                unique.forEach(item => {
+                    if (!groups[item.practice]) groups[item.practice] = new Set();
+                    groups[item.practice].add(item.stakeholder);
+                });
 
-                    return Object.entries(groups).map(([practice, stakeholders]) => ({
-                        practice: practice.length > 20 ? practice.substring(0, 17) + '...' : practice,
-                        count: stakeholders.size
-                    }));
-                } catch (err) {
-                    console.error('Error processing practices:', err);
-                    return [];
-                }
+                return Object.entries(groups).map(([practice, stakeholders]) => ({
+                    practice: practice.length > 25 ? practice.substring(0, 22) + '...' : practice,
+                    count: stakeholders.size
+                }));
             };
 
             const getDataPerStakeholder = (data) => {
-                try {
-                    const grouped = {};
-                    data.forEach(item => {
-                        if (item.stakeholder_label) {
-                            const label = item.stakeholder_label.length > 30 ? 
-                                item.stakeholder_label.substring(0, 27) + '...' : 
-                                item.stakeholder_label;
-                            grouped[label] = (grouped[label] || 0) + 1;
-                        }
-                    });
-                    return Object.entries(grouped).map(([stakeholder, count]) => ({ stakeholder, count })).sort((a, b) => b.count - a.count);
-                } catch (err) {
-                    console.error('Error processing stakeholder data:', err);
-                    return [];
-                }
+                const grouped = {};
+                data.forEach(item => {
+                    if (item.stakeholder_label) {
+                        const label = item.stakeholder_label.length > 35 ? 
+                            item.stakeholder_label.substring(0, 32) + '...' : 
+                            item.stakeholder_label;
+                        grouped[label] = (grouped[label] || 0) + 1;
+                    }
+                });
+                return Object.entries(grouped)
+                    .map(([stakeholder, count]) => ({ stakeholder, count }))
+                    .sort((a, b) => b.count - a.count);
             };
 
             const getDataPerGlobalPractice = (data) => {
-                try {
-                    const grouped = {};
-                    data.forEach(item => {
-                        if (item.global_practice) {
-                            grouped[item.global_practice] = (grouped[item.global_practice] || 0) + 1;
-                        }
-                    });
-                    return Object.entries(grouped).map(([practice, count]) => ({ practice, count }));
-                } catch (err) {
-                    console.error('Error processing practice data:', err);
-                    return [];
-                }
+                const grouped = {};
+                data.forEach(item => {
+                    if (item.global_practice) {
+                        grouped[item.global_practice] = (grouped[item.global_practice] || 0) + 1;
+                    }
+                });
+                return Object.entries(grouped).map(([practice, count]) => ({ practice, count }));
             };
 
             const renderDetails = (item, isSystem) => {
-                try {
-                    const systemFields = [
-                        { key: 'stakeholder_label', label: 'Stakeholder' },
-                        { key: 'system_description', label: 'Description' },
-                        { key: 'managing_partners_y', label: 'Managing Partners' },
-                        { key: 'dept_agency_gis_incharge', label: 'Department/Agency' },
-                        { key: 'system_tech_stack', label: 'Technology Stack' },
-                        { key: 'initial_developer', label: 'Developer' },
-                        { key: 'date_developed', label: 'Date Developed' },
-                        { key: 'host_server', label: 'Host Server' },
-                        { key: 'user_authentication_method', label: 'Authentication' }
-                    ];
+                const systemFields = [
+                    { key: 'stakeholder_label', label: 'Stakeholder' },
+                    { key: 'system_description', label: 'Description' },
+                    { key: 'managing_partners_y', label: 'Managing Partners' },
+                    { key: 'dept_agency_gis_incharge', label: 'Department/Agency' },
+                    { key: 'system_tech_stack', label: 'Technology Stack' },
+                    { key: 'initial_developer', label: 'Developer' },
+                    { key: 'date_developed', label: 'Date Developed' },
+                    { key: 'host_server', label: 'Host Server' },
+                    { key: 'user_authentication_method', label: 'Authentication' }
+                ];
 
-                    const datasetFields = [
-                        { key: 'stakeholder_label', label: 'Stakeholder' },
-                        { key: 'dataset_description', label: 'Description' },
-                        { key: 'data_custodian_stakeholder', label: 'Data Custodian' },
-                        { key: 'data_collection_method', label: 'Collection Method' },
-                        { key: 'geographic_coverage', label: 'Geographic Coverage' },
-                        { key: 'data_collection_frequency', label: 'Collection Frequency' },
-                        { key: 'access_restrictions', label: 'Access Restrictions' },
-                        { key: 'coordinate_system', label: 'Coordinate System' },
-                        { key: 'data_formats', label: 'Data Formats' }
-                    ];
+                const datasetFields = [
+                    { key: 'stakeholder_label', label: 'Stakeholder' },
+                    { key: 'dataset_description', label: 'Description' },
+                    { key: 'data_custodian_stakeholder', label: 'Data Custodian' },
+                    { key: 'data_collection_method', label: 'Collection Method' },
+                    { key: 'geographic_coverage', label: 'Geographic Coverage' },
+                    { key: 'data_collection_frequency', label: 'Collection Frequency' },
+                    { key: 'access_restrictions', label: 'Access Restrictions' },
+                    { key: 'coordinate_system', label: 'Coordinate System' },
+                    { key: 'data_formats', label: 'Data Formats' }
+                ];
 
-                    const fields = isSystem ? systemFields : datasetFields;
-                    const name = isSystem ? item.system_name : item.dataset_name;
-                    const color = isSystem ? 'text-blue-800' : 'text-green-800';
+                const fields = isSystem ? systemFields : datasetFields;
+                const name = isSystem ? item.system_name : item.dataset_name;
+                const color = isSystem ? 'text-blue-800' : 'text-green-800';
 
-                    return (
-                        <div className="space-y-4">
-                            <h3 className={`text-xl font-bold ${color}`}>{name || 'Unnamed'}</h3>
-                            {fields.map(field => {
-                                const value = item[field.key];
-                                if (value && value.toString().trim()) {
-                                    return (
-                                        <div key={field.key} className="border-b pb-2">
-                                            <dt className="font-semibold text-gray-700">{field.label}:</dt>
-                                            <dd className="text-gray-600 mt-1 break-words">{value}</dd>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                            })}
-                        </div>
-                    );
-                } catch (err) {
-                    console.error('Error rendering details:', err);
-                    return <div>Error displaying details</div>;
-                }
+                return (
+                    <div className="space-y-4">
+                        <h3 className={`text-xl font-bold ${color}`}>{name || 'Unnamed'}</h3>
+                        {fields.map(field => {
+                            const value = item[field.key];
+                            if (value && value.toString().trim()) {
+                                return (
+                                    <div key={field.key} className="border-b pb-2">
+                                        <dt className="font-semibold text-gray-700">{field.label}:</dt>
+                                        <dd className="text-gray-600 mt-1 break-words">{value}</dd>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })}
+                    </div>
+                );
             };
 
-            // Token input form
             if (!token) {
                 return (
                     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -298,7 +297,7 @@
                 return (
                     <div className="min-h-screen flex items-center justify-center">
                         <div className="text-center">
-                            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+                            <div className="loading-spinner mx-auto"></div>
                             <p className="mt-4 text-lg">Loading geospatial data...</p>
                         </div>
                     </div>
@@ -384,38 +383,21 @@
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="bg-white p-6 rounded-lg shadow">
                                     <h3 className="text-lg font-semibold mb-4">Stakeholders by Global Practice</h3>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart data={stakeholdersByPractice} layout="horizontal">
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis type="number" />
-                                            <YAxis type="category" dataKey="practice" width={120} />
-                                            <Tooltip />
-                                            <Bar dataKey="count" fill="#3B82F6" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                    <SimpleBarChart 
+                                        data={stakeholdersByPractice} 
+                                        dataKey="count" 
+                                        nameKey="practice"
+                                        color="#3B82F6"
+                                    />
                                 </div>
 
                                 <div className="bg-white p-6 rounded-lg shadow">
                                     <h3 className="text-lg font-semibold mb-4">Distribution by Global Practice</h3>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <PieChart>
-                                            <Pie
-                                                data={stakeholdersByPractice}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={false}
-                                                label={({ practice, count }) => `${count}`}
-                                                outerRadius={100}
-                                                fill="#8884d8"
-                                                dataKey="count"
-                                            >
-                                                {stakeholdersByPractice.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip />
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                    <SimplePieChart 
+                                        data={stakeholdersByPractice} 
+                                        dataKey="count" 
+                                        nameKey="practice"
+                                    />
                                 </div>
                             </div>
                         </section>
@@ -445,40 +427,23 @@
                                     <h3 className="text-lg font-semibold mb-4">
                                         {activeTab === 'systems' ? 'Systems' : 'Datasets'} per Stakeholder
                                     </h3>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart data={currentStakeholderData.slice(0, 10)} layout="horizontal">
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis type="number" />
-                                            <YAxis type="category" dataKey="stakeholder" width={180} />
-                                            <Tooltip />
-                                            <Bar dataKey="count" fill={activeTab === 'systems' ? '#3B82F6' : '#10B981'} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                    <SimpleBarChart 
+                                        data={currentStakeholderData.slice(0, 10)} 
+                                        dataKey="count" 
+                                        nameKey="stakeholder"
+                                        color={activeTab === 'systems' ? '#3B82F6' : '#10B981'}
+                                    />
                                 </div>
 
                                 <div className="bg-white p-6 rounded-lg shadow">
                                     <h3 className="text-lg font-semibold mb-4">
                                         {activeTab === 'systems' ? 'Systems' : 'Datasets'} by Global Practice
                                     </h3>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <PieChart>
-                                            <Pie
-                                                data={currentPracticeData}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={false}
-                                                label={({ count }) => count}
-                                                outerRadius={100}
-                                                fill="#8884d8"
-                                                dataKey="count"
-                                            >
-                                                {currentPracticeData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip />
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                    <SimplePieChart 
+                                        data={currentPracticeData} 
+                                        dataKey="count" 
+                                        nameKey="practice"
+                                    />
                                 </div>
                             </div>
 
@@ -528,21 +493,7 @@
             );
         };
 
-        // Render with error handling
-        try {
-            ReactDOM.render(<Dashboard />, document.getElementById('root'));
-        } catch (err) {
-            console.error('Error rendering dashboard:', err);
-            document.getElementById('root').innerHTML = `
-                <div class="fallback-container">
-                    <div class="fallback-card">
-                        <h1>Dashboard Error</h1>
-                        <p>Failed to load the dashboard. Please check the console for details.</p>
-                        <p>Error: ${err.message}</p>
-                    </div>
-                </div>
-            `;
-        }
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
     </script>
 </body>
 </html>
