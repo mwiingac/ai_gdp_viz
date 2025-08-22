@@ -91,7 +91,6 @@
         const SimplePieChart = ({ data, dataKey, nameKey }) => {
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
             
-            // Better color palette with no similar blues
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#6B7280'];
             const total = data.reduce((sum, item) => sum + item[dataKey], 0);
             
@@ -585,4 +584,5 @@
     </script>
 </body>
 </html>
+
 
