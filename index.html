@@ -94,17 +94,82 @@
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
             const total = data.reduce((sum, item) => sum + item[dataKey], 0);
             
+            // Calculate angles for pie slices
+            let currentAngle = 0;
+            const slices = data.map((item, index) => {
+                const percentage = (item[dataKey] / total) * 100;
+                const angle = (item[dataKey] / total) * 360;
+                const startAngle = currentAngle;
+                currentAngle += angle;
+                
+                return {
+                    ...item,
+                    percentage,
+                    angle,
+                    startAngle,
+                    endAngle: currentAngle,
+                    color: colors[index % colors.length]
+                };
+            });
+            
+            // Create SVG pie chart
+            const radius = 80;
+            const center = 100;
+            
+            const createPath = (startAngle, endAngle, radius, center) => {
+                const startAngleRad = (startAngle - 90) * (Math.PI / 180);
+                const endAngleRad = (endAngle - 90) * (Math.PI / 180);
+                
+                const x1 = center + radius * Math.cos(startAngleRad);
+                const y1 = center + radius * Math.sin(startAngleRad);
+                const x2 = center + radius * Math.cos(endAngleRad);
+                const y2 = center + radius * Math.sin(endAngleRad);
+                
+                const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+                
+                return `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+            };
+            
             return (
-                <div className="space-y-2">
-                    {data.map((item, index) => (
-                        <div 
-                            key={index} 
-                            className="pie-segment"
-                            style={{ backgroundColor: colors[index % colors.length] }}
-                        >
-                            {item[nameKey]}: {item[dataKey]} ({Math.round((item[dataKey] / total) * 100)}%)
-                        </div>
-                    ))}
+                <div className="flex flex-col lg:flex-row items-center">
+                    {/* SVG Pie Chart */}
+                    <div className="mb-4 lg:mb-0 lg:mr-4">
+                        <svg width="200" height="200" viewBox="0 0 200 200">
+                            {slices.map((slice, index) => (
+                                <path
+                                    key={index}
+                                    d={createPath(slice.startAngle, slice.endAngle, radius, center)}
+                                    fill={slice.color}
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    style={{ 
+                                        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                    className="hover:opacity-80 cursor-pointer"
+                                    title={`${slice[nameKey]}: ${slice[dataKey]} (${Math.round(slice.percentage)}%)`}
+                                />
+                            ))}
+                        </svg>
+                    </div>
+                    
+                    {/* Legend */}
+                    <div className="space-y-2 flex-1">
+                        {slices.map((slice, index) => (
+                            <div key={index} className="flex items-center">
+                                <div 
+                                    className="w-4 h-4 rounded mr-3 flex-shrink-0"
+                                    style={{ backgroundColor: slice.color }}
+                                ></div>
+                                <div className="text-sm">
+                                    <span className="font-medium">{slice[nameKey]}</span>
+                                    <span className="text-gray-500 ml-2">
+                                        {slice[dataKey]} ({Math.round(slice.percentage)}%)
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         };
