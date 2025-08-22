@@ -48,10 +48,10 @@
 </head>
 <body>
     <div id="root">
-        <div style="padding: 20px; text-align: center;">
+                                <div style="padding: 20px; text-align: center;">
             <h1>AI GDP Geospatial Data Dashboard</h1>
             <div class="loading-spinner" style="margin: 20px auto;"></div>
-            <p>Loading your real data from OneDrive...</p>
+            <p>Loading your real data from Dropbox...</p>
         </div>
     </div>
 
@@ -119,30 +119,27 @@
             const [loadingStatus, setLoadingStatus] = useState('Initializing...');
 
             useEffect(() => {
-                fetchDataFromOneDrive();
+                fetchDataFromDropbox();
             }, []);
 
-            const fetchDataFromOneDrive = async () => {
+            const fetchDataFromDropbox = async () => {
                 try {
-                    setLoadingStatus('Connecting to OneDrive...');
+                    setLoadingStatus('Connecting to Dropbox...');
                     
-                    // Use the provided OneDrive links
-                    const shareUrl1 = 'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?e=7UA0kp';
-                    const shareUrl2 = 'https://onedrive.live.com/personal/30d385b9b7055920/_layouts/15/Doc.aspx?sourcedoc=%7B617AF48F-49BD-4C33-AAC3-06F3CA69AA6B%7D&file=ai_gdp_data_semi_processed.xlsx&action=default&mobileredirect=true';
+                    // Convert Dropbox sharing link to direct download link
+                    const dropboxUrl = 'https://www.dropbox.com/scl/fi/wp5exxawkarx3fyxaoxhn/ai_gdp_data_semi_processed.xlsx?rlkey=a8o3uszatn80welt8wyh16z7q&st=9m7ribsp&dl=0';
                     
-                    setLoadingStatus('Downloading Excel file...');
+                    setLoadingStatus('Downloading Excel file from Dropbox...');
                     
-                    // Try multiple OneDrive URL formats
+                    // Try multiple Dropbox URL formats
                     const urls = [
-                        // Direct download attempts
-                        'https://1drv.ms/x/c/30d385b9b7055920/EY_0emG9STNMqsMG88ppqmsBRSOCg7nCikEnHGHHZAMCHw?download=1',
-                        shareUrl1.replace('?e=7UA0kp', '&download=1'),
-                        'https://onedrive.live.com/download?cid=30d385b9b7055920&resid=30d385b9b7055920%21134&authkey=APhyamj9STNMqsM',
-                        // Try the direct file ID approach
-                        'https://api.onedrive.com/v1.0/drives/30d385b9b7055920/items/617AF48F49BD4C33AAC306F3CA69AA6B/content',
-                        // Alternative formats
-                        'https://onedrive.live.com/download?resid=30d385b9b7055920%21134',
-                        `https://api.onedrive.com/v1.0/shares/u!${btoa(shareUrl1).replace(/=+$/, '')}/root/content`
+                        // Direct download by changing dl=0 to dl=1
+                        dropboxUrl.replace('&dl=0', '&dl=1'),
+                        dropboxUrl.replace('dl=0', 'dl=1'),
+                        // Alternative format
+                        'https://dl.dropboxusercontent.com/scl/fi/wp5exxawkarx3fyxaoxhn/ai_gdp_data_semi_processed.xlsx?rlkey=a8o3uszatn80welt8wyh16z7q&st=9m7ribsp',
+                        // Raw content approach
+                        dropboxUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('&dl=0', ''),
                     ];
 
                     let response;
@@ -324,7 +321,7 @@
                             <p className="mt-4 text-lg">Loading Your Real Data</p>
                             <p className="mt-2 text-sm text-gray-600">{loadingStatus}</p>
                             <div className="mt-4 text-xs text-gray-500">
-                                This may take a moment as we fetch your Excel file from OneDrive...
+                                Fetching your Excel file from Dropbox...
                             </div>
                         </div>
                     </div>
@@ -340,14 +337,14 @@
                             <div className="bg-gray-100 p-4 rounded text-left text-sm text-gray-700">
                                 <h4 className="font-semibold mb-2">Troubleshooting:</h4>
                                 <ul className="list-disc list-inside space-y-1">
-                                    <li>Ensure the OneDrive link has proper sharing permissions</li>
+                                    <li>Ensure the Dropbox link has proper sharing permissions</li>
                                     <li>Verify the Excel file contains the expected sheets</li>
                                     <li>Check that the file is accessible from the web</li>
                                 </ul>
                                 <p className="mt-3 text-xs">Status: {loadingStatus}</p>
                             </div>
                             <button 
-                                onClick={fetchDataFromOneDrive} 
+                                onClick={fetchDataFromDropbox} 
                                 className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Retry Loading
@@ -375,7 +372,7 @@
                         <div className="max-w-7xl mx-auto px-4 py-6">
                             <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Data Dashboard</h1>
                             <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
-                            <p className="text-green-600 text-sm mt-1">✅ Live data loaded from OneDrive • {systemsData.length} systems • {datasetsData.length} datasets</p>
+                            <p className="text-green-600 text-sm mt-1">✅ Live data loaded from Dropbox • {systemsData.length} systems • {datasetsData.length} datasets</p>
                         </div>
                     </header>
 
