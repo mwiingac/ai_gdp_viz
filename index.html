@@ -177,9 +177,103 @@
         body.dark .hover\\:bg-gray-300:hover {
             background-color: #4b5563 !important;
         }
+
+        /* Password protection overlay */
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        }
+
+        .password-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+
+        .password-button {
+            width: 100%;
+            background: #3B82F6;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .password-button:hover {
+            background: #2563eb;
+        }
+
+        .password-error {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        /* Disable text selection globally */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Allow text selection only for input fields */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        /* Overlay to prevent right-click context menu inspection */
+        .protection-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+    <div class="protection-overlay"></div>
     <div id="root">
         <div style="padding: 20px; text-align: center;">
             <h1>AI GDP Geospatial Profiling</h1>
@@ -189,7 +283,140 @@
     </div>
 
     <script type="text/babel">
+        // Security measures
+        (function() {
+            'use strict';
+            
+            // Disable right-click context menu
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+
+            // Disable common developer shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+Shift+C
+                if (e.keyCode === 123 || // F12
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || // Ctrl+Shift+I/J
+                    (e.ctrlKey && e.keyCode === 85) || // Ctrl+U
+                    (e.ctrlKey && e.shiftKey && e.keyCode === 67) || // Ctrl+Shift+C
+                    (e.ctrlKey && e.keyCode === 83) || // Ctrl+S
+                    (e.ctrlKey && e.keyCode === 65) || // Ctrl+A
+                    (e.ctrlKey && e.keyCode === 80)) { // Ctrl+P
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+
+            // Disable drag and drop
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Clear console periodically
+            setInterval(function() {
+                if (typeof console !== 'undefined') {
+                    try {
+                        console.clear();
+                    } catch (e) {}
+                }
+            }, 1000);
+
+            // Detect developer tools
+            let devtools = {
+                open: false,
+                orientation: null
+            };
+            
+            const threshold = 160;
+            
+            setInterval(function() {
+                if (window.outerHeight - window.innerHeight > threshold || 
+                    window.outerWidth - window.innerWidth > threshold) {
+                    if (!devtools.open) {
+                        devtools.open = true;
+                        document.body.innerHTML = '<div style="padding: 50px; text-align: center; font-size: 24px; color: #ef4444;">Developer tools detected. Access denied.</div>';
+                    }
+                }
+            }, 500);
+
+            // Disable printing
+            window.addEventListener('beforeprint', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Disable save page
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.keyCode === 83) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        })();
+
         const { useState, useEffect } = React;
+
+        const PasswordGate = ({ onAuthenticated }) => {
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [attempts, setAttempts] = useState(0);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const correctPassword = 'L$N25GDIr24#&6w';
+                
+                if (password === correctPassword) {
+                    onAuthenticated();
+                } else {
+                    setError('Incorrect password. Access denied.');
+                    setAttempts(prev => prev + 1);
+                    setPassword('');
+                    
+                    // Lock out after 3 failed attempts
+                    if (attempts >= 2) {
+                        setError('Too many failed attempts. Access permanently denied.');
+                        setTimeout(() => {
+                            window.location.href = 'about:blank';
+                        }, 2000);
+                    }
+                }
+            };
+
+            return (
+                <div className="password-overlay">
+                    <form className="password-form" onSubmit={handleSubmit}>
+                        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#1f2937', fontSize: '1.5rem', fontWeight: '600' }}>
+                            🔒 Secure Access Required
+                        </h2>
+                        <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#6b7280' }}>
+                            Enter password to access the AI GDP Dashboard
+                        </p>
+                        <input
+                            type="password"
+                            className="password-input"
+                            placeholder="Enter password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="off"
+                            autoFocus
+                        />
+                        <button type="submit" className="password-button">
+                            Access Dashboard
+                        </button>
+                        {error && <div className="password-error">{error}</div>}
+                        {attempts > 0 && (
+                            <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '12px', color: '#9ca3af' }}>
+                                Attempts remaining: {3 - attempts}
+                            </div>
+                        )}
+                    </form>
+                </div>
+            );
+        };
 
         const SimpleBarChart = ({ data, dataKey, nameKey, color = "#3B82F6" }) => {
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
@@ -227,10 +454,8 @@
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#6B7280'];
             const total = data.reduce((sum, item) => sum + item[dataKey], 0);
             
-            // Sort data from highest to lowest
             const sortedData = [...data].sort((a, b) => b[dataKey] - a[dataKey]);
             
-            // Calculate angles for pie slices
             let currentAngle = 0;
             const slices = sortedData.map((item, index) => {
                 const percentage = (item[dataKey] / total) * 100;
@@ -248,7 +473,6 @@
                 };
             });
             
-            // Create SVG pie chart
             const radius = 80;
             const center = 100;
             
@@ -268,7 +492,6 @@
             
             return (
                 <div className="flex flex-col lg:flex-row items-center">
-                    {/* SVG Pie Chart */}
                     <div className="mb-4 lg:mb-0 lg:mr-4">
                         <svg width="200" height="200" viewBox="0 0 200 200">
                             {slices.map((slice, index) => (
@@ -289,7 +512,6 @@
                         </svg>
                     </div>
                     
-                    {/* Legend - sorted from highest to lowest */}
                     <div className="space-y-2 flex-1">
                         {slices.map((slice, index) => (
                             <div key={index} className="flex items-center">
@@ -319,14 +541,16 @@
             const [error, setError] = useState(null);
             const [loadingStatus, setLoadingStatus] = useState('Initializing...');
             const [theme, setTheme] = useState('light');
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
 
             useEffect(() => {
-                fetchDataFromDropbox();
-                // Load saved theme
-                const savedTheme = localStorage.getItem('theme') || 'light';
-                setTheme(savedTheme);
-                document.body.className = savedTheme;
-            }, []);
+                if (isAuthenticated) {
+                    fetchDataFromDropbox();
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    setTheme(savedTheme);
+                    document.body.className = savedTheme;
+                }
+            }, [isAuthenticated]);
 
             const toggleTheme = () => {
                 const themes = ['light', 'dark'];
@@ -339,9 +563,9 @@
 
             const getThemeIcon = () => {
                 switch(theme) {
-                    case 'light': return '☀︎';
-                    case 'dark': return '◐';
-                    default: return '☀︎';
+                    case 'light': return '☀️';
+                    case 'dark': return '🌙';
+                    default: return '☀️';
                 }
             };
 
@@ -349,19 +573,14 @@
                 try {
                     setLoadingStatus('Connecting to Dropbox...');
                     
-                    // Convert Dropbox sharing link to direct download link
                     const dropboxUrl = 'https://www.dropbox.com/scl/fi/wp5exxawkarx3fyxaoxhn/ai_gdp_data_semi_processed.xlsx?rlkey=a8o3uszatn80welt8wyh16z7q&st=9m7ribsp&dl=0';
                     
                     setLoadingStatus('Downloading file ...');
                     
-                    // Try multiple Dropbox URL formats
                     const urls = [
-                        // Direct download by changing dl=0 to dl=1
                         dropboxUrl.replace('&dl=0', '&dl=1'),
                         dropboxUrl.replace('dl=0', 'dl=1'),
-                        // Alternative format
                         'https://dl.dropboxusercontent.com/scl/fi/wp5exxawkarx3fyxaoxhn/ai_gdp_data_semi_processed.xlsx?rlkey=a8o3uszatn80welt8wyh16z7q&st=9m7ribsp',
-                        // Raw content approach
                         dropboxUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('&dl=0', ''),
                     ];
 
@@ -394,12 +613,10 @@
 
                     setLoadingStatus('Parsing file...');
                     
-                    // Parse file
                     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                     
                     setLoadingStatus(`Found sheets: ${workbook.SheetNames.join(', ')}`);
 
-                    // Check for expected sheets
                     if (!workbook.SheetNames.includes('systems_main_gis_systems')) {
                         throw new Error(`Systems sheet not found. Available sheets: ${workbook.SheetNames.join(', ')}`);
                     }
@@ -407,12 +624,10 @@
                         throw new Error(`Datasets sheet not found. Available sheets: ${workbook.SheetNames.join(', ')}`);
                     }
 
-                    // Parse systems data
                     const systemsSheet = workbook.Sheets['systems_main_gis_systems'];
                     const systems = XLSX.utils.sheet_to_json(systemsSheet);
                     setLoadingStatus(`Parsed ${systems.length} systems`);
 
-                    // Parse datasets data
                     const datasetsSheet = workbook.Sheets['datasets_main_datasets'];
                     const datasets = XLSX.utils.sheet_to_json(datasetsSheet);
                     setLoadingStatus(`Parsed ${datasets.length} datasets`);
@@ -545,6 +760,10 @@
                 );
             };
 
+            if (!isAuthenticated) {
+                return <PasswordGate onAuthenticated={() => setIsAuthenticated(true)} />;
+            }
+
             if (loading) {
                 return (
                     <div className="min-h-screen flex items-center justify-center">
@@ -621,7 +840,7 @@
                         <div className="max-w-7xl mx-auto px-4 py-6">
                             <h1 className="text-3xl font-bold text-gray-900">AI GDP Geospatial Profiling</h1>
                             <p className="text-gray-600 mt-2">Government Systems and Datasets with Geospatial Data</p>
-                            <p className="text-gray-600 text-sm mt-1"> Live data loaded • {systemsData.length} systems • {datasetsData.length} datasets</p>
+                            <p className="text-gray-600 text-sm mt-1">Live data loaded • {systemsData.length} systems • {datasetsData.length} datasets</p>
                         </div>
                     </header>
 
@@ -761,11 +980,11 @@
             );
         };
 
-        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+        const App = () => {
+            return <Dashboard />;
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
-
-
-
-
