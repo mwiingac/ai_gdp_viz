@@ -448,7 +448,33 @@
             );
         };
 
-        const SimplePieChart = ({ data, dataKey, nameKey }) => {
+        const ModernTable = ({ data }) => {
+            if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
+            
+            return (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b-2 border-gray-200">
+                                <th className="text-left py-3 px-4 font-semibold text-gray-700">Global Practice</th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-700">Stakeholder</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((item, index) => (
+                                <tr 
+                                    key={index} 
+                                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                >
+                                    <td className="py-3 px-4 text-gray-800 font-medium">{item.practice}</td>
+                                    <td className="py-3 px-4 text-gray-600">{item.stakeholder}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        };
             if (!data || data.length === 0) return <div className="text-gray-500">No data available</div>;
             
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#6B7280'];
@@ -681,10 +707,37 @@
                     groups[item.practice].add(item.stakeholder);
                 });
 
-                return Object.entries(groups).map(([practice, stakeholders]) => ({
-                    practice: practice.length > 25 ? practice.substring(0, 22) + '...' : practice,
-                    count: stakeholders.size
-                }));
+                return Object.entries(groups)
+                    .map(([practice, stakeholders]) => ({
+                        practice: practice.length > 25 ? practice.substring(0, 22) + '...' : practice,
+                        count: stakeholders.size
+                    }))
+                    .sort((a, b) => b.count - a.count);
+            };
+
+            const getUniqueStakeholdersWithPractices = () => {
+                const combined = [
+                    ...systemsData.map(i => ({ stakeholder: i.stakeholder_label, practice: i.global_practice })),
+                    ...datasetsData.map(i => ({ stakeholder: i.stakeholder_label, practice: i.global_practice }))
+                ];
+
+                const unique = [];
+                const seen = new Set();
+                
+                combined.forEach(item => {
+                    const key = `${item.stakeholder}-${item.practice}`;
+                    if (!seen.has(key) && item.stakeholder && item.practice) {
+                        seen.add(key);
+                        unique.push(item);
+                    }
+                });
+
+                return unique.sort((a, b) => {
+                    if (a.practice !== b.practice) {
+                        return a.practice.localeCompare(b.practice);
+                    }
+                    return a.stakeholder.localeCompare(b.stakeholder);
+                });
             };
 
             const getDataPerStakeholder = (data) => {
@@ -721,7 +774,6 @@
                     { key: 'system_tech_stack', label: 'Technology Stack' },
                     { key: 'initial_developer', label: 'Developer' },
                     { key: 'date_developed', label: 'Date Developed' },
-                    { key: 'last_updated', label: 'Date last updated' },
                     { key: 'host_server', label: 'Host Server' },
                     { key: 'user_authentication_method', label: 'Authentication' }
                 ];
@@ -808,6 +860,7 @@
 
             const uniqueStakeholders = getAllUniqueStakeholders();
             const stakeholdersByPractice = getStakeholdersByGlobalPractice();
+            const uniqueStakeholdersWithPractices = getUniqueStakeholdersWithPractices();
             const systemsPerStakeholder = getDataPerStakeholder(systemsData);
             const datasetsPerStakeholder = getDataPerStakeholder(datasetsData);
             const systemsPerPractice = getDataPerGlobalPractice(systemsData);
@@ -869,16 +922,6 @@
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                
-                                <div className="bg-white p-6 rounded-lg shadow-md">
-                                    <h3 className="text-lg font-semibold mb-6">Distribution by Global Practice</h3>
-                                    <SimplePieChart 
-                                        data={stakeholdersByPractice} 
-                                        dataKey="count" 
-                                        nameKey="practice"
-                                    />
-                                </div>
-                                
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold mb-6">Stakeholders by Global Practice</h3>
                                     <SimpleBarChart 
@@ -886,6 +929,15 @@
                                         dataKey="count" 
                                         nameKey="practice"
                                         color="#3B82F6"
+                                    />
+                                </div>
+
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-lg font-semibold mb-6">Distribution by Global Practice</h3>
+                                    <SimplePieChart 
+                                        data={stakeholdersByPractice} 
+                                        dataKey="count" 
+                                        nameKey="practice"
                                     />
                                 </div>
                             </div>
@@ -990,6 +1042,3 @@
     </script>
 </body>
 </html>
-
-
-
