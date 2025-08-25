@@ -869,6 +869,16 @@
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                
+                                <div className="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 className="text-lg font-semibold mb-6">Distribution by Global Practice</h3>
+                                    <SimplePieChart 
+                                        data={stakeholdersByPractice} 
+                                        dataKey="count" 
+                                        nameKey="practice"
+                                    />
+                                </div>
+                                
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold mb-6">Stakeholders by Global Practice</h3>
                                     <SimpleBarChart 
@@ -878,17 +888,6 @@
                                         color="#3B82F6"
                                     />
                                 </div>
-
-                                {/*
-                                <div className="bg-white p-6 rounded-lg shadow-md">
-                                    <h3 className="text-lg font-semibold mb-6">Distribution by Global Practice</h3>
-                                    <SimplePieChart 
-                                        data={stakeholdersByPractice} 
-                                        dataKey="count" 
-                                        nameKey="practice"
-                                    />
-                                </div>
-                                    */}
                             </div>
                         </section>
 
@@ -991,5 +990,6 @@
     </script>
 </body>
 </html>
+
 
 
