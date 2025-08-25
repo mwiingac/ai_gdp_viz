@@ -91,6 +91,18 @@
         body.dark * {
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
         }
+
+        /* Sticky column styles for dark mode */
+        body.dark .sticky {
+            background-color: #1f2937 !important;
+        }
+        body.dark .sticky.bg-gray-50 {
+            background-color: #1f2937 !important;
+        }
+        body.dark .hover\\:bg-gray-50:hover .sticky {
+            background-color: #374151 !important;
+        }
+
         .refresh-button {
             position: fixed;
             bottom: 20px;
@@ -440,7 +452,15 @@
                 <div className="space-y-2">
                     {data.map((item, index) => (
                         <div key={index} className="flex items-center">
-                            <div className="w-48 text-sm text-gray-700 truncate mr-3" title={item[nameKey]}>
+                            <div 
+                                className="w-56 text-sm text-gray-700 mr-3 cursor-help" 
+                                title={item.fullName || item[nameKey]}
+                                style={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
                                 {item[nameKey]}
                             </div>
                             <div className="flex-1">
@@ -519,7 +539,7 @@
                                         transition: 'all 0.3s ease'
                                     }}
                                     className="hover:opacity-80 cursor-pointer"
-                                    title={`${slice[nameKey]}: ${slice[dataKey]} (${Math.round(slice.percentage)}%)`}
+                                    title={`${slice.fullName || slice[nameKey]}: ${slice[dataKey]} (${Math.round(slice.percentage)}%)`}
                                 />
                             ))}
                         </svg>
@@ -696,8 +716,9 @@
 
                 return Object.entries(groups).map(([practice, stakeholders]) => ({
                     practice: practice.length > 25 ? practice.substring(0, 22) + '...' : practice,
+                    fullName: practice,
                     count: stakeholders.size
-                })).sort((a, b) => b.count - a.count); // Sort in descending order
+                })).sort((a, b) => b.count - a.count);
             };
 
             const getUniqueStakeholderPracticeData = () => {
@@ -730,15 +751,22 @@
                 const grouped = {};
                 data.forEach(item => {
                     if (item.stakeholder_label) {
-                        const label = item.stakeholder_label.length > 40 ? 
-                            item.stakeholder_label.substring(0, 37) + '...' : 
-                            item.stakeholder_label;
-                        grouped[label] = (grouped[label] || 0) + 1;
+                        const fullLabel = item.stakeholder_label;
+                        const displayLabel = fullLabel.length > 40 ? 
+                            fullLabel.substring(0, 37) + '...' : 
+                            fullLabel;
+                        
+                        if (!grouped[fullLabel]) {
+                            grouped[fullLabel] = { 
+                                stakeholder: displayLabel, 
+                                fullName: fullLabel,
+                                count: 0 
+                            };
+                        }
+                        grouped[fullLabel].count++;
                     }
                 });
-                return Object.entries(grouped)
-                    .map(([stakeholder, count]) => ({ stakeholder, count }))
-                    .sort((a, b) => b.count - a.count);
+                return Object.values(grouped).sort((a, b) => b.count - a.count);
             };
 
             const getDataPerGlobalPractice = (data) => {
@@ -748,7 +776,11 @@
                         grouped[item.global_practice] = (grouped[item.global_practice] || 0) + 1;
                     }
                 });
-                return Object.entries(grouped).map(([practice, count]) => ({ practice, count }));
+                return Object.entries(grouped).map(([practice, count]) => ({ 
+                    practice, 
+                    fullName: practice,
+                    count 
+                }));
             };
 
             const renderDetails = (item, isSystem) => {
@@ -1039,11 +1071,128 @@
                                 </div>
                             </div>
                         </section>
+			
+			{/* Full-width table section */}
+                        <section className="mt-12">
+                            <div className="bg-white p-6 rounded-lg shadow-md">
+                                <h3 className="text-xl font-semibold mb-6">
+                                    Complete {activeTab === 'systems' ? 'Systems' : 'Datasets'} Data
+                                </h3>
+                                <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '80vh' }}>
+                                    <table className="w-full text-sm border-collapse">
+                                        <thead className="bg-gray-50 sticky top-0 z-10">
+                                            <tr>
+                                                {activeTab === 'systems' ? (
+                                                    <>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sticky left-0 bg-gray-50 z-20">System Name</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48">Global Practice</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Stakeholder</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Dept/Agency</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Initial Developer</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Date Developed</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Last Updated</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Maintaining Team</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Organizations with Access</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Integration Capabilities</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Integration Description</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Data Export Formats</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">File Export Formats</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Has Source Code</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Usage Frequency</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Usage Purpose</th>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sticky left-0 bg-gray-50 z-20">Dataset Name</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48">Global Practice</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Stakeholder</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Data Custodian</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Collection Method</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Geographic Coverage</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Collection Frequency</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Update Schedule</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48">Share Metadata</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Access Restrictions</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Usage Restrictions</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Other Restrictions</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-24">Cost to Access</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Access Method</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Terms of Use</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Coordinate System</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Data Formats</th>
+                                                    </>
+                                                )}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentData.map((item, index) => (
+                                                <tr key={index} className="hover:bg-gray-50 transition-colors border-b">
+                                                    {activeTab === 'systems' ? (
+                                                        <>
+                                                            <td className="px-3 py-3 sticky left-0 bg-white z-10"><span className="font-bold text-gray-900">{item.system_name || '-'}</span></td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.global_practice || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.stakeholder_label || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.dept_agency_gis_incharge || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.initial_developer || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.date_developed || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.last_updated || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.maintaining_team || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.organisations_with_access || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.integration_capabilities || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700 max-w-xs">
+                                                                <div className="truncate" title={item.integration_capabilities_desc}>
+                                                                    {item.integration_capabilities_desc || '-'}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.data_export_formats || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.file_export_formats || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.stakeholder_has_code || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.usage_freq || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700 max-w-xs">
+                                                                <div className="truncate" title={item.usage_purpose}>
+                                                                    {item.usage_purpose || '-'}
+                                                                </div>
+                                                            </td>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="px-3 py-3 sticky left-0 bg-white z-10"><span className="font-bold text-gray-900">{item.dataset_name || '-'}</span></td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.global_practice || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.stakeholder_label || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.data_custodian_stakeholder || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.data_collection_method || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.geographic_coverage || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.data_collection_frequency || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.update_schedule || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.share_data_metadata || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.access_restrictions || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.usage_restrictions || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.usage_restrictions_oth || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.cost_to_access || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.data_access_method || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.terms_of_use || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.coordinate_system || '-'}</td>
+                                                            <td className="px-3 py-3 text-gray-700">{item.data_formats || '-'}</td>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {currentData.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500">
+                                        No {activeTab} data available
+                                    </div>
+                                )}
+                            </div>
+                        </section>
                     </div>
                 </div>
             );
         };
-
+	
         const App = () => {
             return <Dashboard />;
         };
