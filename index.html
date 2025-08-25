@@ -10,6 +10,19 @@
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* scaling fix */
+        body {
+            transform: scale(0.8);
+            transform-origin: top left;
+            width: 125%; /* Compensate for scaling */
+        }
+        @media screen and (-webkit-device-pixel-ratio: 1.25) {
+            body { zoom: 0.8; }
+        }
+        @media screen and (-webkit-device-pixel-ratio: 1.5) {
+            body { zoom: 0.67; }
+        }
+        
         .chart-bar {
             background: #3B82F6;
             height: 24px;
@@ -1029,6 +1042,7 @@
     </script>
 </body>
 </html>
+
 
 
 
