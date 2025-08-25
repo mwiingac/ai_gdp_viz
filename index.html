@@ -898,11 +898,24 @@
                                 
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold mb-6">Distribution by Global Practice</h3>
-                                    <SimplePieChart 
-                                        data={stakeholdersByPractice} 
-                                        dataKey="count" 
-                                        nameKey="practice"
-                                    />
+                                    <div className="max-h-96 overflow-y-auto">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-gray-50 sticky top-0">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 border-b">Global Practice</th>
+                                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 border-b">Stakeholder</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {getUniqueStakeholderPracticeData().map((item, index) => (
+                                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                                        <td className="px-4 py-3 border-b text-gray-700">{item.global_practice}</td>
+                                                        <td className="px-4 py-3 border-b text-gray-600">{item.stakeholder_label}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                                 
                                 <div className="bg-white p-6 rounded-lg shadow-md">
@@ -1016,4 +1029,3 @@
     </script>
 </body>
 </html>
-
