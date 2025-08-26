@@ -103,6 +103,28 @@
             background-color: #374151 !important;
         }
 
+        /* Sortable table headers */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+        .sortable-header:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        body.dark .sortable-header:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        .sort-icon {
+            margin-left: 4px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        .sort-icon.active {
+            opacity: 1;
+            color: #3B82F6;
+        }
+
         .refresh-button {
             position: fixed;
             bottom: 20px;
@@ -193,8 +215,8 @@
         body.dark .bg-blue-50 {
             background-color: #1e3a8a !important;
         }
-        body.dark .bg-green-50 {
-            background-color: #14532d !important;
+        body.dark .bg-orange-50 {
+            background-color: #F1C693 !important;
         }
         body.dark .bg-gray-200 {
             background-color: #374151 !important;
@@ -575,6 +597,7 @@
             const [loadingStatus, setLoadingStatus] = useState('Initializing...');
             const [theme, setTheme] = useState('light');
             const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
             useEffect(() => {
                 if (isAuthenticated) {
@@ -683,7 +706,56 @@
                 setSelectedItem(null);
                 setSystemsData([]);
                 setDatasetsData([]);
+                setSortConfig({ key: null, direction: 'asc' });
                 fetchDataFromDropbox();
+            };
+
+            const handleSort = (key) => {
+                let direction = 'asc';
+                if (sortConfig.key === key && sortConfig.direction === 'asc') {
+                    direction = 'desc';
+                }
+                setSortConfig({ key, direction });
+            };
+
+            const getSortedData = (data, sortKey, sortDirection) => {
+                if (!sortKey) return data;
+                
+                return [...data].sort((a, b) => {
+                    const aVal = a[sortKey] || '';
+                    const bVal = b[sortKey] || '';
+                    
+                    // Handle numeric values
+                    const aNum = parseFloat(aVal);
+                    const bNum = parseFloat(bVal);
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+                    }
+                    
+                    // Handle date values
+                    const aDate = new Date(aVal);
+                    const bDate = new Date(bVal);
+                    if (aDate.toString() !== 'Invalid Date' && bDate.toString() !== 'Invalid Date') {
+                        return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+                    }
+                    
+                    // Handle string values
+                    const aStr = String(aVal).toLowerCase();
+                    const bStr = String(bVal).toLowerCase();
+                    
+                    if (sortDirection === 'asc') {
+                        return aStr.localeCompare(bStr);
+                    } else {
+                        return bStr.localeCompare(aStr);
+                    }
+                });
+            };
+
+            const getSortIcon = (columnKey) => {
+                if (sortConfig.key !== columnKey) {
+                    return '↕️';
+                }
+                return sortConfig.direction === 'asc' ? '↑' : '↓';
             };
 
             const getAllUniqueStakeholders = () => {
@@ -738,7 +810,6 @@
                     }
                 });
 
-                // Sort by global_practice first, then by stakeholder_label
                 return unique.sort((a, b) => {
                     if (a.global_practice !== b.global_practice) {
                         return a.global_practice.localeCompare(b.global_practice);
@@ -821,7 +892,7 @@
 
                 const fields = isSystem ? systemFields : datasetFields;
                 const name = isSystem ? item.system_name : item.dataset_name;
-                const color = isSystem ? 'text-blue-800' : 'text-green-800';
+                const color = isSystem ? 'text-blue-800' : 'text-orange-800';
 
                 return (
                     <div className="space-y-4">
@@ -901,7 +972,6 @@
 
             return (
                 <div className="min-h-screen bg-gray-50">
-                    {/* Floating Buttons */}
                     <button 
                         className="refresh-button" 
                         onClick={handleRefresh}
@@ -933,22 +1003,22 @@
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Stakeholders</h3>
-                                    <p className="text-3xl font-bold text-blue-600">{uniqueStakeholders.length}</p>
+                                    <p className="text-3xl font-bold" style={{color: "#98AABD"}}>{uniqueStakeholders.length}</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Systems</h3>
-                                    <p className="text-3xl font-bold text-green-600">{systemsData.length}</p>
+                                    <p className="text-3xl font-bold text-blue-600">{systemsData.length}</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Datasets</h3>
-                                    <p className="text-3xl font-bold text-purple-600">{datasetsData.length}</p>
+                                    <p className="text-3xl font-bold text-orange-600">{datasetsData.length}</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-lg shadow-md">
                                     <h3 className="text-lg font-semibold text-gray-700">Global Practices</h3>
-                                    <p className="text-3xl font-bold text-orange-600">{stakeholdersByPractice.length}</p>
+                                    <p className="text-3xl font-bold text-gray-600">{stakeholdersByPractice.length}</p>
                                 </div>
                             </div>
-
+				
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 
                                 <div className="bg-white p-6 rounded-lg shadow-md">
@@ -979,7 +1049,7 @@
                                         data={stakeholdersByPractice} 
                                         dataKey="count" 
                                         nameKey="practice"
-                                        color="#3B82F6"
+                                        color="#A8BCD1"
                                     />
                                 </div>
                             </div>
@@ -997,7 +1067,7 @@
                                 </button>
                                 <button
                                     className={`px-6 py-3 font-semibold rounded-r-lg transition-colors ${
-                                        activeTab === 'datasets' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        activeTab === 'datasets' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                                     onClick={() => setActiveTab('datasets')}
                                 >
@@ -1014,7 +1084,7 @@
                                         data={currentStakeholderData.slice(0, 10)} 
                                         dataKey="count" 
                                         nameKey="stakeholder"
-                                        color={activeTab === 'systems' ? '#3B82F6' : '#10B981'}
+                                        color={activeTab === 'systems' ? '#3B82F6' : '#FF694B'}
                                     />
                                 </div>
 
@@ -1041,12 +1111,12 @@
                                                 key={index}
                                                 className={`p-3 cursor-pointer border-b hover:bg-gray-50 transition-colors ${
                                                     selectedItem === item 
-                                                        ? (activeTab === 'systems' ? 'bg-blue-50 border-blue-300' : 'bg-green-50 border-green-300')
+                                                        ? (activeTab === 'systems' ? 'bg-blue-50 border-blue-300' : 'bg-orange-50 border-orange-300')
                                                         : ''
                                                 }`}
                                                 onClick={() => setSelectedItem(item)}
                                             >
-                                                <div className={`font-medium ${activeTab === 'systems' ? 'text-blue-600' : 'text-green-600'}`}>
+                                                <div className={`font-medium ${activeTab === 'systems' ? 'text-blue-600' : 'text-orange-600'}`}>
                                                     {item[itemKey] || 'Unnamed'}
                                                 </div>
                                                 <div className="text-sm text-gray-500 mt-1">{item.stakeholder_label || 'Unknown'}</div>
@@ -1072,11 +1142,10 @@
                             </div>
                         </section>
 			
-			{/* Full-width table section */}
                         <section className="mt-12">
                             <div className="bg-white p-6 rounded-lg shadow-md">
                                 <h3 className="text-xl font-semibold mb-6">
-                                    Detailed {activeTab === 'systems' ? 'Systems' : 'Datasets'} Data
+                                    Complete {activeTab === 'systems' ? 'Systems' : 'Datasets'} Data
                                 </h3>
                                 <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '80vh' }}>
                                     <table className="w-full text-sm border-collapse">
@@ -1084,48 +1153,213 @@
                                             <tr>
                                                 {activeTab === 'systems' ? (
                                                     <>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sticky left-0 bg-gray-50 z-20">System Name</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48">Global Practice</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Stakeholder</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Dept/Agency</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Initial Developer</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Date Developed</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Last Updated</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Maintaining Team</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Organizations with Access</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Integration Capabilities</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Integration Description</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Data Export Formats</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">File Export Formats</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Has Source Code</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Usage Frequency</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Usage Purpose</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sticky left-0 bg-gray-50 z-20 sortable-header" onClick={() => handleSort('system_name')}>
+                                                            System Name
+                                                            <span className={`sort-icon ${sortConfig.key === 'system_name' ? 'active' : ''}`}>
+                                                                {getSortIcon('system_name')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sortable-header" onClick={() => handleSort('global_practice')}>
+                                                            Global Practice
+                                                            <span className={`sort-icon ${sortConfig.key === 'global_practice' ? 'active' : ''}`}>
+                                                                {getSortIcon('global_practice')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('stakeholder_label')}>
+                                                            Stakeholder
+                                                            <span className={`sort-icon ${sortConfig.key === 'stakeholder_label' ? 'active' : ''}`}>
+                                                                {getSortIcon('stakeholder_label')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72 sortable-header" onClick={() => handleSort('dept_agency_gis_incharge')}>
+                                                            Dept/Agency
+                                                            <span className={`sort-icon ${sortConfig.key === 'dept_agency_gis_incharge' ? 'active' : ''}`}>
+                                                                {getSortIcon('dept_agency_gis_incharge')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('initial_developer')}>
+                                                            Initial Developer
+                                                            <span className={`sort-icon ${sortConfig.key === 'initial_developer' ? 'active' : ''}`}>
+                                                                {getSortIcon('initial_developer')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28 sortable-header" onClick={() => handleSort('date_developed')}>
+                                                            Date Developed
+                                                            <span className={`sort-icon ${sortConfig.key === 'date_developed' ? 'active' : ''}`}>
+                                                                {getSortIcon('date_developed')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28 sortable-header" onClick={() => handleSort('last_updated')}>
+                                                            Last Updated
+                                                            <span className={`sort-icon ${sortConfig.key === 'last_updated' ? 'active' : ''}`}>
+                                                                {getSortIcon('last_updated')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('maintaining_team')}>
+                                                            Maintaining Team
+                                                            <span className={`sort-icon ${sortConfig.key === 'maintaining_team' ? 'active' : ''}`}>
+                                                                {getSortIcon('maintaining_team')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72 sortable-header" onClick={() => handleSort('organisations_with_access')}>
+                                                            Organizations with Access
+                                                            <span className={`sort-icon ${sortConfig.key === 'organisations_with_access' ? 'active' : ''}`}>
+                                                                {getSortIcon('organisations_with_access')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72 sortable-header" onClick={() => handleSort('integration_capabilities')}>
+                                                            Integration Capabilities
+                                                            <span className={`sort-icon ${sortConfig.key === 'integration_capabilities' ? 'active' : ''}`}>
+                                                                {getSortIcon('integration_capabilities')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72 sortable-header" onClick={() => handleSort('integration_capabilities_desc')}>
+                                                            Integration Description
+                                                            <span className={`sort-icon ${sortConfig.key === 'integration_capabilities_desc' ? 'active' : ''}`}>
+                                                                {getSortIcon('integration_capabilities_desc')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('data_export_formats')}>
+                                                            Data Export Formats
+                                                            <span className={`sort-icon ${sortConfig.key === 'data_export_formats' ? 'active' : ''}`}>
+                                                                {getSortIcon('data_export_formats')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('file_export_formats')}>
+                                                            File Export Formats
+                                                            <span className={`sort-icon ${sortConfig.key === 'file_export_formats' ? 'active' : ''}`}>
+                                                                {getSortIcon('file_export_formats')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28 sortable-header" onClick={() => handleSort('stakeholder_has_code')}>
+                                                            Has Source Code
+                                                            <span className={`sort-icon ${sortConfig.key === 'stakeholder_has_code' ? 'active' : ''}`}>
+                                                                {getSortIcon('stakeholder_has_code')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('usage_freq')}>
+                                                            Usage Frequency
+                                                            <span className={`sort-icon ${sortConfig.key === 'usage_freq' ? 'active' : ''}`}>
+                                                                {getSortIcon('usage_freq')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('usage_purpose')}>
+                                                            Usage Purpose
+                                                            <span className={`sort-icon ${sortConfig.key === 'usage_purpose' ? 'active' : ''}`}>
+                                                                {getSortIcon('usage_purpose')}
+                                                            </span>
+                                                        </th>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sticky left-0 bg-gray-50 z-20">Dataset Name</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48">Global Practice</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Stakeholder</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Data Custodian</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Collection Method</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Geographic Coverage</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Collection Frequency</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Update Schedule</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48">Share Metadata</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Access Restrictions</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Usage Restrictions</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Other Restrictions</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-24">Cost to Access</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72">Access Method</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56">Terms of Use</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32">Coordinate System</th>
-                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28">Data Formats</th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sticky left-0 bg-gray-50 z-20 sortable-header" onClick={() => handleSort('dataset_name')}>
+                                                            Dataset Name
+                                                            <span className={`sort-icon ${sortConfig.key === 'dataset_name' ? 'active' : ''}`}>
+                                                                {getSortIcon('dataset_name')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sortable-header" onClick={() => handleSort('global_practice')}>
+                                                            Global Practice
+                                                            <span className={`sort-icon ${sortConfig.key === 'global_practice' ? 'active' : ''}`}>
+                                                                {getSortIcon('global_practice')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('stakeholder_label')}>
+                                                            Stakeholder
+                                                            <span className={`sort-icon ${sortConfig.key === 'stakeholder_label' ? 'active' : ''}`}>
+                                                                {getSortIcon('stakeholder_label')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('data_custodian_stakeholder')}>
+                                                            Data Custodian
+                                                            <span className={`sort-icon ${sortConfig.key === 'data_custodian_stakeholder' ? 'active' : ''}`}>
+                                                                {getSortIcon('data_custodian_stakeholder')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32 sortable-header" onClick={() => handleSort('data_collection_method')}>
+                                                            Collection Method
+                                                            <span className={`sort-icon ${sortConfig.key === 'data_collection_method' ? 'active' : ''}`}>
+                                                                {getSortIcon('data_collection_method')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32 sortable-header" onClick={() => handleSort('geographic_coverage')}>
+                                                            Geographic Coverage
+                                                            <span className={`sort-icon ${sortConfig.key === 'geographic_coverage' ? 'active' : ''}`}>
+                                                                {getSortIcon('geographic_coverage')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32 sortable-header" onClick={() => handleSort('data_collection_frequency')}>
+                                                            Collection Frequency
+                                                            <span className={`sort-icon ${sortConfig.key === 'data_collection_frequency' ? 'active' : ''}`}>
+                                                                {getSortIcon('data_collection_frequency')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28 sortable-header" onClick={() => handleSort('update_schedule')}>
+                                                            Update Schedule
+                                                            <span className={`sort-icon ${sortConfig.key === 'update_schedule' ? 'active' : ''}`}>
+                                                                {getSortIcon('update_schedule')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-48 sortable-header" onClick={() => handleSort('share_data_metadata')}>
+                                                            Share Metadata
+                                                            <span className={`sort-icon ${sortConfig.key === 'share_data_metadata' ? 'active' : ''}`}>
+                                                                {getSortIcon('share_data_metadata')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32 sortable-header" onClick={() => handleSort('access_restrictions')}>
+                                                            Access Restrictions
+                                                            <span className={`sort-icon ${sortConfig.key === 'access_restrictions' ? 'active' : ''}`}>
+                                                                {getSortIcon('access_restrictions')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32 sortable-header" onClick={() => handleSort('usage_restrictions')}>
+                                                            Usage Restrictions
+                                                            <span className={`sort-icon ${sortConfig.key === 'usage_restrictions' ? 'active' : ''}`}>
+                                                                {getSortIcon('usage_restrictions')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72 sortable-header" onClick={() => handleSort('usage_restrictions_oth')}>
+                                                            Other Restrictions
+                                                            <span className={`sort-icon ${sortConfig.key === 'usage_restrictions_oth' ? 'active' : ''}`}>
+                                                                {getSortIcon('usage_restrictions_oth')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-24 sortable-header" onClick={() => handleSort('cost_to_access')}>
+                                                            Cost to Access
+                                                            <span className={`sort-icon ${sortConfig.key === 'cost_to_access' ? 'active' : ''}`}>
+                                                                {getSortIcon('cost_to_access')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-72 sortable-header" onClick={() => handleSort('data_access_method')}>
+                                                            Access Method
+                                                            <span className={`sort-icon ${sortConfig.key === 'data_access_method' ? 'active' : ''}`}>
+                                                                {getSortIcon('data_access_method')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-56 sortable-header" onClick={() => handleSort('terms_of_use')}>
+                                                            Terms of Use
+                                                            <span className={`sort-icon ${sortConfig.key === 'terms_of_use' ? 'active' : ''}`}>
+                                                                {getSortIcon('terms_of_use')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-32 sortable-header" onClick={() => handleSort('coordinate_system')}>
+                                                            Coordinate System
+                                                            <span className={`sort-icon ${sortConfig.key === 'coordinate_system' ? 'active' : ''}`}>
+                                                                {getSortIcon('coordinate_system')}
+                                                            </span>
+                                                        </th>
+                                                        <th className="px-3 py-3 text-left font-semibold text-gray-700 border-b min-w-28 sortable-header" onClick={() => handleSort('data_formats')}>
+                                                            Data Formats
+                                                            <span className={`sort-icon ${sortConfig.key === 'data_formats' ? 'active' : ''}`}>
+                                                                {getSortIcon('data_formats')}
+                                                            </span>
+                                                        </th>
                                                     </>
                                                 )}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {currentData.map((item, index) => (
+                                            {getSortedData(currentData, sortConfig.key, sortConfig.direction).map((item, index) => (
                                                 <tr key={index} className="hover:bg-gray-50 transition-colors border-b">
                                                     {activeTab === 'systems' ? (
                                                         <>
@@ -1201,4 +1435,3 @@
     </script>
 </body>
 </html>
-
