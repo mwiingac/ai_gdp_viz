@@ -415,8 +415,9 @@
             const handleSubmit = (e) => {
                 e.preventDefault();
                 const correctPassword = 'L$N25GDIr24#&6w';
+				const secondPassword = 'second-decade-chain';
                 
-                if (password === correctPassword) {
+                if (password === correctPassword || password === secondPassword) {
                     onAuthenticated();
                 } else {
                     setError('Incorrect password. Access denied.');
@@ -1435,3 +1436,4 @@
     </script>
 </body>
 </html>
+
